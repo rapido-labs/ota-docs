@@ -20,15 +20,15 @@ const config = {
   },
 
   // Set the production url of your site here
-  url: 'https://rapido-ota-docs.vercel.app',
+  url: 'https://docs.rapido.bike',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'vijay-rapido', // Usually your GitHub org/user name.
-  projectName: 'rapido-ota-docs', // Usually your repo name.
+  organizationName: 'rapido-labs', // Usually your GitHub org/user name.
+  projectName: 'ota-docs', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -51,7 +51,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/vijay-rapido/rapido-ota-docs/tree/main/docs',
+            'https://github.com/rapido-labs/ota-docs/tree/main/docs',
         },
         blog: false, // Disable blog functionality
         theme: {
@@ -80,7 +80,7 @@ const config = {
             label: 'Documentation',
           },
           {
-            href: 'https://github.com/vijay-rapido/rapido-ota-docs',
+            href: 'https://github.com/rapido-labs/ota-docs',
             label: 'GitHub',
             position: 'right',
           },
@@ -136,7 +136,7 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/vijay-rapido/rapido-ota-docs',
+                href: 'https://github.com/rapido-labs/ota-docs',
               },
             ],
           },
