@@ -175,7 +175,7 @@ app.post('/api/auth/rapido-login', async (req, res) => {
             }
         );
         
-        if (rapidoResponse.data.valid) {
+        if (rapidoResponse.data) {
             const userData = rapidoResponse.data.user;
             
             // Create or update user in your system

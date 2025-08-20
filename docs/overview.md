@@ -64,9 +64,8 @@ Secure session/cookie management across app launches:
 ### Multi-Layer Security
 1. **Transport Security**: All communication over HTTPS/TLS
 2. **Token Encryption**: Tokens are encrypted both in transit and at rest
-3. **Time-based Expiry**: Short-lived tokens minimize exposure risk
-4. **API Rate Limiting**: Prevents abuse and ensures system stability
-5. **IP Whitelisting**: Additional layer for server-to-server communication
+3. **API Rate Limiting**: Prevents abuse and ensures system stability
+4. **IP Whitelisting**: Additional layer for server-to-server communication
 
 ### Privacy Protection
 - **Minimal Data Exposure**: Only necessary user data is shared

@@ -24,6 +24,7 @@ POST /partner/fetch-user-details HTTP/1.1
 Host: api.rapido.bike
 Content-Type: application/json
 Authorization: Bearer YOUR_PARTNER_API_KEY
+X-client-id: client_id
 User-Agent: YourApp/1.0.0
 X-Request-ID: req_1234567890
 ```
@@ -31,8 +32,7 @@ X-Request-ID: req_1234567890
 ### Request Body
 ```json
 {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "clientId": "your-partner-client-id"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
@@ -41,9 +41,8 @@ X-Request-ID: req_1234567890
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `token` | string | Yes | The authentication token received from your PWA via `onTokenReceived` |
-| `clientId` | string | Yes | Your partner client ID provided during onboarding |
 
-#### Parameter Validation
+#### Validation
 
 ```javascript
 // Example validation before making API call
@@ -60,9 +59,10 @@ function validateTokenRequest(token, clientId) {
         throw new Error('Client ID is required and must be a string');
     }
     
-    if (!/^[a-zA-Z0-9_-]+$/.test(clientId)) {
-        throw new Error('Client ID contains invalid characters');
+    if (!allowedClients.includes(clientId)) {
+        throw new Error('invalid Client ID');
     }
+}
     
     return true;
 }
@@ -75,42 +75,13 @@ function validateTokenRequest(token, clientId) {
 ```json
 {
     "success": true,
+    "code": 7000,
     "data": {
         "valid": true,
         "user": {
-            "id": "user_12345",
             "name": "John Doe",
-            "email": "john.doe@example.com",
-            "phone": "+91-9876543210",
-            "profile": {
-                "firstName": "John",
-                "lastName": "Doe",
-                "dateOfBirth": "1990-05-15",
-                "gender": "male",
-                "profilePicture": "https://cdn.rapido.bike/profiles/user_12345.jpg"
-            },
-            "verification": {
-                "emailVerified": true,
-                "phoneVerified": true,
-                "kycStatus": "verified"
-            },
-            "preferences": {
-                "language": "en",
-                "currency": "INR",
-                "timezone": "Asia/Kolkata"
-            },
-            "metadata": {
-                "registrationDate": "2023-01-15T10:30:00Z",
-                "lastActiveDate": "2024-01-15T09:45:00Z",
-                "accountType": "premium"
-            }
+            "mobile": "+91-9876543210"
         },
-        "tokenInfo": {
-            "issuedAt": "2024-01-15T10:00:00Z",
-            "expiresAt": "2024-01-15T10:15:00Z",
-            "scope": ["profile", "email", "phone"],
-            "permissions": ["read:profile", "read:preferences"]
-        }
     },
     "timestamp": "2024-01-15T10:00:30Z",
     "requestId": "req_1234567890"
@@ -122,16 +93,10 @@ function validateTokenRequest(token, clientId) {
 | Field | Type | Description |
 |-------|------|-------------|
 | `success` | boolean | Always `true` for successful requests |
-| `data.valid` | boolean | Whether the token is valid |
-| `data.user.id` | string | Unique user identifier |
+| `code` | number | user defined code for success |
 | `data.user.name` | string | User's full name |
-| `data.user.email` | string | User's email address (if consented) |
-| `data.user.phone` | string | User's phone number (if consented) |
+| `data.user.mobile` | string | User's phone number (if consented) |
 | `data.user.profile` | object | Detailed profile information |
-| `data.user.verification` | object | Verification status for various user attributes |
-| `data.user.preferences` | object | User preferences and settings |
-| `data.user.metadata` | object | Additional user metadata |
-| `data.tokenInfo` | object | Information about the token itself |
 
 ### Error Responses
 
@@ -139,12 +104,11 @@ function validateTokenRequest(token, clientId) {
 ```json
 {
     "success": false,
+    "code": 7001,
     "error": {
-        "code": "INVALID_TOKEN",
-        "message": "The provided token is invalid or expired",
+        "message": "Token Invalid",
         "details": {
-            "reason": "token_expired",
-            "expiredAt": "2024-01-15T09:45:00Z"
+            "field": "token is missing",
         }
     },
     "timestamp": "2024-01-15T10:00:30Z",
@@ -169,13 +133,10 @@ function validateTokenRequest(token, clientId) {
 ```json
 {
     "success": false,
+    "code": 7002,
     "error": {
-        "code": "INVALID_REQUEST",
-        "message": "Missing required parameters",
-        "details": {
-            "missingFields": ["token"],
-            "invalidFields": ["clientId"]
-        }
+        "message": "ClientID Invalid",
+        "details": {}
     },
     "timestamp": "2024-01-15T10:00:30Z",
     "requestId": "req_1234567890"
@@ -231,15 +192,15 @@ class RapidoTokenValidator {
             const response = await axios.post(
                 `${this.baseURL}/fetch-user-details`,
                 {
-                    token: token,
-                    clientId: clientId
+                    token: token
                 },
                 {
                     headers: {
                         'Authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json',
                         'User-Agent': 'YourApp/1.0.0',
-                        'X-Request-ID': this.generateRequestId()
+                        'X-Request-ID': this.generateRequestId(),
+                        'X-client-id': clientId
                     },
                     timeout: 10000 // 10 seconds
                 }
@@ -370,11 +331,11 @@ class RapidoTokenValidator:
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'YourApp/1.0.0',
-            'X-Request-ID': self._generate_request_id()
+            'X-Request-ID': self._generate_request_id(),
+            'X-client-id': client_id
         }
         data = {
-            'token': token,
-            'clientId': client_id
+            'token': token
         }
         
         try:

@@ -230,10 +230,10 @@ function validateAPIConfig() {
 
 **Common Causes**:
 ```javascript
-// ❌ Missing client ID
+// ❌ Missing token
 const response = await fetch('/partner/fetch-user-details', {
     method: 'POST',
-    body: JSON.stringify({ token: token }) // Missing clientId
+    body: ''
 });
 
 // ✅ Correct request format
@@ -241,11 +241,11 @@ const response = await fetch('/partner/fetch-user-details', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiKey}`,
+        'x-client-id': 'CLIENT_ID'
     },
     body: JSON.stringify({
-        token: token,
-        clientId: clientId
+        token: token
     })
 });
 ```
