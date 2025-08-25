@@ -96,11 +96,11 @@ class RapidoAPIClient {
         
         try {
             const response = await this.axios.post('/fetch-user-details', {
-                token: token,
-                clientId: this.config.clientId
+                token: token
             }, {
                 headers: {
-                    'X-Request-ID': requestId
+                    'X-Request-ID': requestId,
+                    'X-client-id': this.config.clientId
                 }
             });
             
@@ -143,7 +143,7 @@ const userSchema = {
     rapidoUserId: String,
     name: String,
     email: String,
-    phone: String,
+    mobile: String,
     profile: Object,
     createdAt: { type: Date, default: Date.now },
     lastLoginAt: Date
@@ -171,7 +171,7 @@ class UserService {
             // Update existing user
             existingUser.name = userData.name;
             existingUser.email = userData.email;
-            existingUser.phone = userData.phone;
+            existingUser.mobile = userData.mobile;
             existingUser.profile = userData.profile;
             existingUser.lastLoginAt = new Date();
             
@@ -182,7 +182,7 @@ class UserService {
                 rapidoUserId: userData.id,
                 name: userData.name,
                 email: userData.email,
-                phone: userData.phone,
+                mobile: userData.mobile,
                 profile: userData.profile,
                 lastLoginAt: new Date()
             });
@@ -416,11 +416,11 @@ class RapidoAPIClient:
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'PartnerApp/1.0.0',
-            'X-Request-ID': self._generate_request_id()
+            'X-Request-ID': self._generate_request_id(),
+            'X-client-id': self.client_id
         }
         data = {
-            'token': token,
-            'clientId': self.client_id
+            'token': token
         }
         
         try:
@@ -466,7 +466,7 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     rapido_user_id = models.CharField(max_length=100, unique=True, null=True)
-    phone = models.CharField(max_length=20, null=True)
+    mobile = models.CharField(max_length=20, null=True)
     profile_data = models.JSONField(default=dict)
     last_login_at = models.DateTimeField(null=True)
     
@@ -570,7 +570,7 @@ class RapidoAuthView(View):
             user.first_name = user_data.get('profile', {}).get('firstName', '')
             user.last_name = user_data.get('profile', {}).get('lastName', '')
             user.email = user_data.get('email', '')
-            user.phone = user_data.get('phone', '')
+            user.mobile = user_data.get('mobile', '')
             user.profile_data = user_data.get('profile', {})
             user.last_login_at = datetime.now()
             user.save()
@@ -583,7 +583,7 @@ class RapidoAuthView(View):
                 first_name=user_data.get('profile', {}).get('firstName', ''),
                 last_name=user_data.get('profile', {}).get('lastName', ''),
                 email=user_data.get('email', ''),
-                phone=user_data.get('phone', ''),
+                mobile=user_data.get('mobile', ''),
                 profile_data=user_data.get('profile', {}),
                 last_login_at=datetime.now()
             )
@@ -658,11 +658,11 @@ class RapidoAPIService
                 'Content-Type' => 'application/json',
                 'User-Agent' => 'PartnerApp/1.0.0',
                 'X-Request-ID' => $requestId,
+                'X-client-id' => $this->clientId
             ])
             ->timeout($this->timeout)
             ->post($this->baseUrl . '/fetch-user-details', [
-                'token' => $token,
-                'clientId' => $this->clientId,
+                'token' => $token
             ]);
 
             if ($response->successful()) {
@@ -802,7 +802,7 @@ class RapidoAuthController extends Controller
             [
                 'name' => $userData['name'],
                 'email' => $userData['email'] ?? '',
-                'phone' => $userData['phone'] ?? '',
+                'mobile' => $userData['mobile'] ?? '',
                 'profile_data' => $userData['profile'] ?? [],
                 'last_login_at' => now(),
             ]
@@ -1007,12 +1007,12 @@ describe('RapidoAPIClient', () => {
             expect(mockedAxios.post).toHaveBeenCalledWith(
                 '/fetch-user-details',
                 {
-                    token: 'valid-token',
-                    clientId: 'test-client-id'
+                    token: 'valid-token'
                 },
                 expect.objectContaining({
                     headers: expect.objectContaining({
-                        'X-Request-ID': expect.any(String)
+                        'X-Request-ID': expect.any(String),
+                        'X-client-id': 'test_client_id'
                     })
                 })
             );

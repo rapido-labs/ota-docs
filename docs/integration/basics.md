@@ -315,7 +315,7 @@ app.post('/api/auth/rapido-login', async (req, res) => {
             }
         );
         
-        if (rapidoResponse.data && rapidoResponse.data.valid) {
+        if (rapidoResponse.data) {
             const userData = rapidoResponse.data.user;
             
             // Process user data

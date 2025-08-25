@@ -39,7 +39,7 @@ Response Success
   "valid": true,
   "details": {
     "name": "RapidoUser",
-    "phoneNumber": "9876543210"
+    "mobile": "9876543210"
   }
 }
 Response Failure
