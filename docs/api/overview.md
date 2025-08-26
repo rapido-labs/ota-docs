@@ -25,7 +25,7 @@ Rapido's Partner API follows REST principles with JSON-based request/response fo
 All API requests must include your Partner API key in the Authorization header:
 
 ```http
-Authorization: Bearer YOUR_PARTNER_API_KEY
+Authorization: CLIENT_KEY
 ```
 
 Your Partner API key is provided during the partner onboarding process. Store it securely and never expose it in client-side code.
@@ -93,7 +93,8 @@ All API responses follow a consistent error format:
 ### Request Headers
 ```http
 Content-Type: application/json
-Authorization: Bearer YOUR_PARTNER_API_KEY
+Authorization: CLIENT_KEY
+x-client-id: CLIENT_ID
 User-Agent: YourApp/1.0.0
 X-Request-ID: unique-request-identifier
 ```

@@ -10,28 +10,16 @@ Here are answers to the most common questions about integrating with Rapido's Pa
 
 ## Authentication & Tokens
 
-### How long are authentication tokens valid?
+### What happens if a token is invalid?
 
-Authentication tokens typically expire in **15 minutes** from the time they are issued. This short expiry window is a security feature to minimize exposure if a token is compromised.
-
-```javascript
-// Tokens should be used immediately after receiving
-function onTokenReceived(token) {
-    // Don't delay - validate token immediately
-    validateTokenWithBackend(token);
-}
-```
-
-### What happens if a token is invalid or expired?
-
-When you try to validate an expired or invalid token, Rapido's API will return an error:
+When you try to validate an invalid token, Rapido's API will return an error:
 
 ```json
 {
     "success": false,
+    "code": "INVALID_TOKEN",
     "error": {
-        "code": "INVALID_TOKEN",
-        "message": "The provided token is invalid or expired"
+        "message": "The provided token is invalid"
     }
 }
 ```
@@ -40,7 +28,7 @@ Your backend should handle this by returning an authentication error to your PWA
 
 ### Can I cache or store tokens for later use?
 
-**No, absolutely not.** Tokens are designed to be single-use and short-lived. Never store tokens in:
+**No, absolutely not.** Tokens are designed to be single-use. Never store tokens in:
 - localStorage or sessionStorage
 - Database
 - Cache systems

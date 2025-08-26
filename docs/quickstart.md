@@ -168,14 +168,14 @@ app.post('/api/auth/rapido-login', async (req, res) => {
             { token: token },
             {
                 headers: {
-                    'Authorization': 'Bearer YOUR_PARTNER_API_KEY',
-                    'x-client-id': 'YOUR_PARTNER_ID',
+                    'Authorization': 'CLIENT_KEY',
+                    'x-client-id': 'CLIENT_ID',
                     'Content-Type': 'application/json'
                 }
             }
         );
         
-        if (rapidoResponse.data.valid) {
+        if (rapidoResponse.data) {
             const userData = rapidoResponse.data.user;
             
             // Create or update user in your system
