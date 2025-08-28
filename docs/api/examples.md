@@ -99,8 +99,7 @@ class RapidoAPIClient {
                 token: token
             }, {
                 headers: {
-                    'X-Request-ID': requestId,
-                    'X-client-id': this.config.clientId
+                    'x-client-id': this.config.clientId
                 }
             });
             
@@ -413,11 +412,10 @@ class RapidoAPIClient:
         
         url = f"{self.base_url}/fetch-user-details"
         headers = {
-            'Authorization': f'Bearer {self.api_key}',
+            'authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'PartnerApp/1.0.0',
-            'X-Request-ID': self._generate_request_id(),
-            'X-client-id': self.client_id
+            'x-client-id': self.client_id
         }
         data = {
             'token': token
@@ -654,11 +652,10 @@ class RapidoAPIService
         
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
                 'User-Agent' => 'PartnerApp/1.0.0',
-                'X-Request-ID' => $requestId,
-                'X-client-id' => $this->clientId
+                'x-client-id' => $this->clientId
             ])
             ->timeout($this->timeout)
             ->post($this->baseUrl . '/fetch-user-details', [
@@ -1011,8 +1008,7 @@ describe('RapidoAPIClient', () => {
                 },
                 expect.objectContaining({
                     headers: expect.objectContaining({
-                        'X-Request-ID': expect.any(String),
-                        'X-client-id': 'test_client_id'
+                        'x-client-id': 'test_client_id'
                     })
                 })
             );

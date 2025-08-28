@@ -23,10 +23,9 @@ The Token Validation API is the primary endpoint for validating user authenticat
 POST /ota/fetch-user-details HTTP/1.1
 Host: api.rapido.bike
 Content-Type: application/json
-Authorization: CLIENT_KEY
-X-client-id: client_id
+authorization: CLIENT_KEY
+x-client-id: client_id
 User-Agent: YourApp/1.0.0
-X-Request-ID: req_1234567890
 ```
 
 ### Request Body
@@ -196,11 +195,10 @@ class RapidoTokenValidator {
                 },
                 {
                     headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
+                        'authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json',
                         'User-Agent': 'YourApp/1.0.0',
-                        'X-Request-ID': this.generateRequestId(),
-                        'X-client-id': clientId
+                        'x-client-id': clientId
                     },
                     timeout: 10000 // 10 seconds
                 }
@@ -328,11 +326,10 @@ class RapidoTokenValidator:
         # Prepare request
         url = f"{self.base_url}/fetch-user-details"
         headers = {
-            'Authorization': f'Bearer {self.api_key}',
+            'authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'YourApp/1.0.0',
-            'X-Request-ID': self._generate_request_id(),
-            'X-client-id': client_id
+            'x-client-id': client_id
         }
         data = {
             'token': token
