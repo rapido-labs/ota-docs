@@ -241,7 +241,7 @@ const response = await fetch('/ota/fetch-user-details', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'authorization': `Bearer ${apiKey}`,
         'x-client-id': 'CLIENT_ID'
     },
     body: JSON.stringify({

@@ -27,7 +27,7 @@ const config = {
         clientId: process.env.RAPIDO_CLIENT_ID,
         baseURL: process.env.NODE_ENV === 'production' 
             ? 'https://partner-api.rapido.bike/ota'
-            : 'https://staging-api.rapido.bike/partner',
+            : 'https://customer.staging.plectrum.dev/api/ota',
         timeout: 10000
     },
     session: {

@@ -168,7 +168,7 @@ app.post('/api/auth/rapido-login', async (req, res) => {
             { token: token },
             {
                 headers: {
-                    'Authorization': 'CLIENT_KEY',
+                    'authorization': 'CLIENT_KEY',
                     'x-client-id': 'CLIENT_ID',
                     'Content-Type': 'application/json'
                 }
