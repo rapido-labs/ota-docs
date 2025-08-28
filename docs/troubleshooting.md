@@ -208,7 +208,7 @@ function validateAPIConfig() {
        try {
            const response = await fetch(`${baseURL}/health`, {
                headers: {
-                   'Authorization': `Bearer ${apiKey}`,
+                   'Authorization': `${apiKey}`,
                    'Content-Type': 'application/json'
                }
            });
@@ -241,7 +241,7 @@ const response = await fetch('/ota/fetch-user-details', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
-        'authorization': `Bearer ${apiKey}`,
+        'authorization': `${apiKey}`,
         'x-client-id': 'CLIENT_ID'
     },
     body: JSON.stringify({
@@ -557,7 +557,7 @@ async function runIntegrationTest() {
     try {
         const response = await fetch(`${config.rapidoAPI}/health`, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': `${apiKey}`
             },
             timeout: 10000
         });

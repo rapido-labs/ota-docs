@@ -156,7 +156,7 @@ class SecureAPIConfig {
     
     getHeaders() {
         return {
-            'authorization': `Bearer ${this.apiKey}`,
+            'authorization': `${this.apiKey}`,
             'Content-Type': 'application/json'
         };
     }

@@ -196,7 +196,7 @@ window.NativeJSBridge.requestUserToken('your-client-id');
 
 // API Key - ONLY use in backend
 const headers = {
-    'authorization': `Bearer ${process.env.RAPIDO_PARTNER_API_KEY}`
+    'authorization': `${process.env.RAPIDO_PARTNER_API_KEY}`
 };
 ```
 

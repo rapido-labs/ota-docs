@@ -195,7 +195,7 @@ class RapidoTokenValidator {
                 },
                 {
                     headers: {
-                        'authorization': `Bearer ${this.apiKey}`,
+                        'authorization': `${this.apiKey}`,
                         'Content-Type': 'application/json',
                         'User-Agent': 'YourApp/1.0.0',
                         'x-client-id': clientId
@@ -326,7 +326,7 @@ class RapidoTokenValidator:
         # Prepare request
         url = f"{self.base_url}/fetch-user-details"
         headers = {
-            'authorization': f'Bearer {self.api_key}',
+            'authorization': f'{self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'YourApp/1.0.0',
             'x-client-id': client_id

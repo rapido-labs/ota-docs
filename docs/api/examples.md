@@ -60,7 +60,7 @@ class RapidoAPIClient {
             baseURL: config.baseURL,
             timeout: config.timeout,
             headers: {
-                'Authorization': `Bearer ${config.apiKey}`,
+                'Authorization': `${config.apiKey}`,
                 'Content-Type': 'application/json',
                 'User-Agent': 'PartnerApp/1.0.0'
             }
@@ -412,7 +412,7 @@ class RapidoAPIClient:
         
         url = f"{self.base_url}/fetch-user-details"
         headers = {
-            'authorization': f'Bearer {self.api_key}',
+            'authorization': f'{self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'PartnerApp/1.0.0',
             'x-client-id': self.client_id
@@ -652,7 +652,7 @@ class RapidoAPIService
         
         try {
             $response = Http::withHeaders([
-                'authorization' => 'Bearer ' . $this->apiKey,
+                'authorization' => $this->apiKey,
                 'Content-Type' => 'application/json',
                 'User-Agent' => 'PartnerApp/1.0.0',
                 'x-client-id' => $this->clientId
