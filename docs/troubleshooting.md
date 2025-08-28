@@ -196,7 +196,7 @@ function validateAPIConfig() {
    // Ensure you're using the correct environment
    const baseURL = process.env.NODE_ENV === 'production'
        ? 'https://partner-api.rapido.bike/ota'      // Production
-       : 'https://staging-api.rapido.bike/partner'; // Staging
+       : 'https://customer.staging.plectrum.dev/api/ota'; // Staging
    
    console.log('Using API endpoint:', baseURL);
    ```
@@ -231,13 +231,13 @@ function validateAPIConfig() {
 **Common Causes**:
 ```javascript
 // ❌ Missing token
-const response = await fetch('/partner/fetch-user-details', {
+const response = await fetch('/ota/fetch-user-details', {
     method: 'POST',
     body: ''
 });
 
 // ✅ Correct request format
-const response = await fetch('/partner/fetch-user-details', {
+const response = await fetch('/ota/fetch-user-details', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',

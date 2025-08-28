@@ -20,7 +20,7 @@ The Token Validation API is the primary endpoint for validating user authenticat
 
 ### Headers
 ```http
-POST /partner/fetch-user-details HTTP/1.1
+POST /ota/fetch-user-details HTTP/1.1
 Host: api.rapido.bike
 Content-Type: application/json
 Authorization: CLIENT_KEY
@@ -177,7 +177,7 @@ class RapidoTokenValidator {
     getBaseURL(environment) {
         const urls = {
             production: 'https://partner-api.rapido.bike/ota',
-            staging: 'https://staging-api.rapido.bike/partner',
+            staging: 'https://customer.staging.plectrum.dev/api/ota',
             sandbox: 'https://sandbox-api.rapido.bike/partner'
         };
         return urls[environment] || urls.production;
@@ -314,7 +314,7 @@ class RapidoTokenValidator:
     def _get_base_url(self, environment: str) -> str:
         urls = {
             'production': 'https://partner-api.rapido.bike/ota',
-            'staging': 'https://staging-api.rapido.bike/partner',
+            'staging': 'https://customer.staging.plectrum.dev/api/ota',
             'sandbox': 'https://sandbox-api.rapido.bike/partner'
         }
         return urls.get(environment, urls['production'])

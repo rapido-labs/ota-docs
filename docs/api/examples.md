@@ -397,7 +397,7 @@ RAPIDO_CONFIG = {
     'API_KEY': os.environ.get('RAPIDO_PARTNER_API_KEY'),
     'CLIENT_ID': os.environ.get('RAPIDO_CLIENT_ID'),
     'BASE_URL': 'https://partner-api.rapido.bike/ota' if os.environ.get('ENV') == 'production' 
-               else 'https://staging-api.rapido.bike/partner',
+               else 'https://customer.staging.plectrum.dev/api/ota',
     'TIMEOUT': 10
 }
 
