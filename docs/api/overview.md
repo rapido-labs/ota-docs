@@ -17,7 +17,7 @@ Rapido's Partner API follows REST principles with JSON-based request/response fo
 | Environment | Base URL |
 |-------------|----------|
 | Production | `https://partner-api.rapido.bike/ota` |
-| Staging | `https://customer.staging.plectrum.dev/api/ota` |
+| Staging | `https://reach-out-to-rapido-team-for-host/api/ota` |
 | Sandbox | `https://sandbox-api.rapido.bike/partner` |
 
 ### Authentication

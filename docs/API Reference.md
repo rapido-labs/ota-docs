@@ -25,7 +25,7 @@ Response
 ```
 Get User Details for Token
 Method: POST
-URL: https://customer.staging.plectrum.dev/api/ota/fetch-user-details
+URL: https://reach-out-to-rapido-team-for-host/api/ota/fetch-user-details
 Headers:
 {
   "x-client-id": "client-id"

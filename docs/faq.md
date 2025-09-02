@@ -179,7 +179,7 @@ if (process.env.NODE_ENV === 'development') {
 ### Can I test with real tokens in development?
 
 Yes, but use Rapido's staging environment:
-- **Staging API**: `https://customer.staging.plectrum.dev/api/ota`
+- **Staging API**: `https://reach-out-to-rapido-team-for-host/api/ota`
 - **Staging tokens** are provided for testing
 - Contact the integration team for staging credentials
 
