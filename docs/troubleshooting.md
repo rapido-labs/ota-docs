@@ -196,7 +196,7 @@ function validateAPIConfig() {
    // Ensure you're using the correct environment
    const baseURL = process.env.NODE_ENV === 'production'
        ? 'https://partner-api.rapido.bike/ota'      // Production
-       : 'https://staging-api.rapido.bike/partner'; // Staging
+       : 'https://rapido_ota_host/api/ota'; // Staging
    
    console.log('Using API endpoint:', baseURL);
    ```
@@ -208,7 +208,7 @@ function validateAPIConfig() {
        try {
            const response = await fetch(`${baseURL}/health`, {
                headers: {
-                   'Authorization': `Bearer ${apiKey}`,
+                   'Authorization': `${apiKey}`,
                    'Content-Type': 'application/json'
                }
            });
@@ -231,17 +231,17 @@ function validateAPIConfig() {
 **Common Causes**:
 ```javascript
 // ❌ Missing token
-const response = await fetch('/partner/fetch-user-details', {
+const response = await fetch('/ota/fetch-user-details', {
     method: 'POST',
     body: ''
 });
 
 // ✅ Correct request format
-const response = await fetch('/partner/fetch-user-details', {
+const response = await fetch('/ota/fetch-user-details', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'authorization': `${apiKey}`,
         'x-client-id': 'CLIENT_ID'
     },
     body: JSON.stringify({
@@ -557,7 +557,7 @@ async function runIntegrationTest() {
     try {
         const response = await fetch(`${config.rapidoAPI}/health`, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': `${apiKey}`
             },
             timeout: 10000
         });

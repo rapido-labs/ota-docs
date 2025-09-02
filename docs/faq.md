@@ -179,7 +179,7 @@ if (process.env.NODE_ENV === 'development') {
 ### Can I test with real tokens in development?
 
 Yes, but use Rapido's staging environment:
-- **Staging API**: `https://staging-api.rapido.bike/partner`
+- **Staging API**: `https://rapido_ota_host/api/ota`
 - **Staging tokens** are provided for testing
 - Contact the integration team for staging credentials
 
@@ -196,7 +196,7 @@ window.NativeJSBridge.requestUserToken('your-client-id');
 
 // API Key - ONLY use in backend
 const headers = {
-    'Authorization': `Bearer ${process.env.RAPIDO_PARTNER_API_KEY}`
+    'authorization': `${process.env.RAPIDO_PARTNER_API_KEY}`
 };
 ```
 

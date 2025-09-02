@@ -17,7 +17,7 @@ Rapido's Partner API follows REST principles with JSON-based request/response fo
 | Environment | Base URL |
 |-------------|----------|
 | Production | `https://partner-api.rapido.bike/ota` |
-| Staging | `https://staging-api.rapido.bike/partner` |
+| Staging | `https://rapido_ota_host/api/ota` |
 | Sandbox | `https://sandbox-api.rapido.bike/partner` |
 
 ### Authentication
@@ -25,7 +25,7 @@ Rapido's Partner API follows REST principles with JSON-based request/response fo
 All API requests must include your Partner API key in the Authorization header:
 
 ```http
-Authorization: CLIENT_KEY
+authorization: CLIENT_KEY
 ```
 
 Your Partner API key is provided during the partner onboarding process. Store it securely and never expose it in client-side code.
@@ -93,10 +93,9 @@ All API responses follow a consistent error format:
 ### Request Headers
 ```http
 Content-Type: application/json
-Authorization: CLIENT_KEY
+authorization: CLIENT_KEY
 x-client-id: CLIENT_ID
 User-Agent: YourApp/1.0.0
-X-Request-ID: unique-request-identifier
 ```
 
 ### Success Response Format

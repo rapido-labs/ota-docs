@@ -27,7 +27,7 @@ const config = {
         clientId: process.env.RAPIDO_CLIENT_ID,
         baseURL: process.env.NODE_ENV === 'production' 
             ? 'https://partner-api.rapido.bike/ota'
-            : 'https://staging-api.rapido.bike/partner',
+            : 'https://rapido_ota_host/api/ota',
         timeout: 10000
     },
     session: {
@@ -60,7 +60,7 @@ class RapidoAPIClient {
             baseURL: config.baseURL,
             timeout: config.timeout,
             headers: {
-                'Authorization': `Bearer ${config.apiKey}`,
+                'Authorization': `${config.apiKey}`,
                 'Content-Type': 'application/json',
                 'User-Agent': 'PartnerApp/1.0.0'
             }
@@ -99,8 +99,7 @@ class RapidoAPIClient {
                 token: token
             }, {
                 headers: {
-                    'X-Request-ID': requestId,
-                    'X-client-id': this.config.clientId
+                    'x-client-id': this.config.clientId
                 }
             });
             
@@ -397,7 +396,7 @@ RAPIDO_CONFIG = {
     'API_KEY': os.environ.get('RAPIDO_PARTNER_API_KEY'),
     'CLIENT_ID': os.environ.get('RAPIDO_CLIENT_ID'),
     'BASE_URL': 'https://partner-api.rapido.bike/ota' if os.environ.get('ENV') == 'production' 
-               else 'https://staging-api.rapido.bike/partner',
+               else 'https://rapido_ota_host/api/ota',
     'TIMEOUT': 10
 }
 
@@ -413,11 +412,10 @@ class RapidoAPIClient:
         
         url = f"{self.base_url}/fetch-user-details"
         headers = {
-            'Authorization': f'Bearer {self.api_key}',
+            'authorization': f'{self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'PartnerApp/1.0.0',
-            'X-Request-ID': self._generate_request_id(),
-            'X-client-id': self.client_id
+            'x-client-id': self.client_id
         }
         data = {
             'token': token
@@ -654,11 +652,10 @@ class RapidoAPIService
         
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'authorization' => $this->apiKey,
                 'Content-Type' => 'application/json',
                 'User-Agent' => 'PartnerApp/1.0.0',
-                'X-Request-ID' => $requestId,
-                'X-client-id' => $this->clientId
+                'x-client-id' => $this->clientId
             ])
             ->timeout($this->timeout)
             ->post($this->baseUrl . '/fetch-user-details', [
@@ -1011,8 +1008,7 @@ describe('RapidoAPIClient', () => {
                 },
                 expect.objectContaining({
                     headers: expect.objectContaining({
-                        'X-Request-ID': expect.any(String),
-                        'X-client-id': 'test_client_id'
+                        'x-client-id': 'test_client_id'
                     })
                 })
             );

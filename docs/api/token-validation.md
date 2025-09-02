@@ -20,13 +20,12 @@ The Token Validation API is the primary endpoint for validating user authenticat
 
 ### Headers
 ```http
-POST /partner/fetch-user-details HTTP/1.1
+POST /ota/fetch-user-details HTTP/1.1
 Host: api.rapido.bike
 Content-Type: application/json
-Authorization: CLIENT_KEY
-X-client-id: client_id
+authorization: CLIENT_KEY
+x-client-id: client_id
 User-Agent: YourApp/1.0.0
-X-Request-ID: req_1234567890
 ```
 
 ### Request Body
@@ -177,7 +176,7 @@ class RapidoTokenValidator {
     getBaseURL(environment) {
         const urls = {
             production: 'https://partner-api.rapido.bike/ota',
-            staging: 'https://staging-api.rapido.bike/partner',
+            staging: 'https://rapido_ota_host/api/ota',
             sandbox: 'https://sandbox-api.rapido.bike/partner'
         };
         return urls[environment] || urls.production;
@@ -196,11 +195,10 @@ class RapidoTokenValidator {
                 },
                 {
                     headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
+                        'authorization': `${this.apiKey}`,
                         'Content-Type': 'application/json',
                         'User-Agent': 'YourApp/1.0.0',
-                        'X-Request-ID': this.generateRequestId(),
-                        'X-client-id': clientId
+                        'x-client-id': clientId
                     },
                     timeout: 10000 // 10 seconds
                 }
@@ -314,7 +312,7 @@ class RapidoTokenValidator:
     def _get_base_url(self, environment: str) -> str:
         urls = {
             'production': 'https://partner-api.rapido.bike/ota',
-            'staging': 'https://staging-api.rapido.bike/partner',
+            'staging': 'https://rapido_ota_host/api/ota',
             'sandbox': 'https://sandbox-api.rapido.bike/partner'
         }
         return urls.get(environment, urls['production'])
@@ -328,11 +326,10 @@ class RapidoTokenValidator:
         # Prepare request
         url = f"{self.base_url}/fetch-user-details"
         headers = {
-            'Authorization': f'Bearer {self.api_key}',
+            'authorization': f'{self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'YourApp/1.0.0',
-            'X-Request-ID': self._generate_request_id(),
-            'X-client-id': client_id
+            'x-client-id': client_id
         }
         data = {
             'token': token

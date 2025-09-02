@@ -277,7 +277,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rapido API configuration
 const RAPIDO_API = {
-    BASE_URL: 'https://partner-api.rapido.bike',
+    BASE_URL: 'https://rapido_ota_host/api',
     PARTNER_ID: process.env.RAPIDO_PARTNER_ID, // Store securely
     PARTNER_KEY: process.env.RAPIDO_PARTNER_API_KEY, // Store securely
     TIMEOUT: 10000 // 10 seconds
@@ -300,13 +300,13 @@ app.post('/api/auth/rapido-login', async (req, res) => {
         
         // Call Rapido API
         const rapidoResponse = await axios.post(
-            `${RAPIDO_API.BASE_URL}/partner/fetch-user-details`,
+            `${RAPIDO_API.BASE_URL}/ota/fetch-user-details`,
             {
                 token: token
             },
             {
                 headers: {
-                    'Authorization': `Bearer ${RAPIDO_API.PARTNER_KEY}`,
+                    'authorization': `${RAPIDO_API.PARTNER_KEY}`,
                     'x-client-id': `${PARTNER_ID}`,
                     'Content-Type': 'application/json',
                     'User-Agent': 'YourApp-Partner/1.0'
