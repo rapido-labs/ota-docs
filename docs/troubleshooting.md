@@ -196,7 +196,7 @@ function validateAPIConfig() {
    // Ensure you're using the correct environment
    const baseURL = process.env.NODE_ENV === 'production'
        ? 'https://partner-api.rapido.bike/ota'      // Production
-       : 'https://reach-out-to-rapido-team-for-host/api/ota'; // Staging
+       : 'https://rapido_ota_host/api/ota'; // Staging
    
    console.log('Using API endpoint:', baseURL);
    ```

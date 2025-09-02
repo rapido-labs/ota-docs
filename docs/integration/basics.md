@@ -277,7 +277,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rapido API configuration
 const RAPIDO_API = {
-    BASE_URL: 'https://reach-out-to-rapido-team-for-host/api',
+    BASE_URL: 'https://rapido_ota_host/api',
     PARTNER_ID: process.env.RAPIDO_PARTNER_ID, // Store securely
     PARTNER_KEY: process.env.RAPIDO_PARTNER_API_KEY, // Store securely
     TIMEOUT: 10000 // 10 seconds

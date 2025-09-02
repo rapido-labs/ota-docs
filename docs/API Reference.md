@@ -25,7 +25,7 @@ Response
 ```
 Get User Details for Token
 Method: POST
-URL: https://reach-out-to-rapido-team-for-host/api/ota/fetch-user-details
+URL: https://rapido_ota_host/api/ota/fetch-user-details
 Headers:
 {
   "x-client-id": "client-id"
