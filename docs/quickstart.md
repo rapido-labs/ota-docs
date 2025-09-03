@@ -125,8 +125,8 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
         function requestNewToken() {
             // Request token from Rapido
             if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-                // Replace 'your-client-id' with your actual client ID from Rapido
-                window.NativeJSBridge.requestUserToken('your-client-id');
+                // Request user token - client ID handled automatically
+                window.NativeJSBridge.requestUserToken();
             } else {
                 console.error('Rapido NativeJSBridge interface not available');
             }
