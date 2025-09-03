@@ -473,14 +473,14 @@ const RapidoBridgeDebug = {
             }
         }
         
-        console.log('Global callback set:', typeof window.onTokenReceived);
+        console.log('JSBridge callback set:', typeof window.JSBridge.onTokenReceived);
         console.groupEnd();
     },
     
     testTokenCallback(mockToken = 'test-token-123') {
-        if (typeof window.onTokenReceived === 'function') {
+        if (typeof window.JSBridge.onTokenReceived === 'function') {
             console.log('Testing token callback with mock token');
-            window.onTokenReceived(mockToken);
+            window.JSBridge.onTokenReceived(mockToken);
         } else {
             console.error('onTokenReceived not defined');
         }
@@ -493,8 +493,8 @@ const RapidoBridgeDebug = {
                 requestUserToken: () => {
                     console.log('Mock: requestUserToken called');
                     setTimeout(() => {
-                        if (window.onTokenReceived) {
-                            window.onTokenReceived('mock-token-' + Date.now());
+                        if (window.JSBridge.onTokenReceived) {
+                            window.JSBridge.onTokenReceived('mock-token-' + Date.now());
                         }
                     }, 1000);
                 },

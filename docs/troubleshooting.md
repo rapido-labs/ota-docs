@@ -19,10 +19,10 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 1. **Check if function is globally accessible**
    ```javascript
    // Test in browser console
-   console.log(typeof window.onTokenReceived); // Should be 'function'
+   console.log(typeof window.JSBridge.onTokenReceived); // Should be 'function'
    
    // If undefined, the function isn't globally accessible
-   if (typeof window.onTokenReceived === 'undefined') {
+   if (typeof window.JSBridge.onTokenReceived === 'undefined') {
        console.error('onTokenReceived is not globally accessible');
    }
    ```
@@ -31,10 +31,10 @@ This is the most common issue developers face. Here's how to diagnose and fix it
    ```javascript
    // ❌ Wrong - function defined after token request
    window.NativeJSBridge.requestUserToken();
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct - function defined before token request
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    window.NativeJSBridge.requestUserToken();
    ```
 
@@ -67,7 +67,7 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 })();
 
 // ✅ Solution - make function globally accessible
-window.onTokenReceived = function(token) {
+window.JSBridge.onTokenReceived = function(token) {
     console.log('Token received');
     // Handle token
 };
@@ -77,15 +77,15 @@ window.onTokenReceived = function(token) {
 ```javascript
 // ❌ Problem - React/Vue might overwrite the function
 useEffect(() => {
-    window.onTokenReceived = handleToken;
+    window.JSBridge.onTokenReceived = handleToken;
 }, []); // Function might be overwritten
 
 // ✅ Solution - ensure function persists
 useEffect(() => {
     // Store reference to prevent overwriting
-    const originalCallback = window.onTokenReceived;
+    const originalCallback = window.JSBridge.onTokenReceived;
     
-    window.onTokenReceived = function(token) {
+    window.JSBridge.onTokenReceived = function(token) {
         handleToken(token);
         // Call original if it existed
         if (originalCallback && originalCallback !== handleToken) {
@@ -95,8 +95,8 @@ useEffect(() => {
     
     return () => {
         // Cleanup if needed
-        if (window.onTokenReceived === handleToken) {
-            delete window.onTokenReceived;
+        if (window.JSBridge.onTokenReceived === handleToken) {
+            delete window.JSBridge.onTokenReceived;
         }
     };
 }, []);
@@ -110,7 +110,7 @@ function requestTokenWithTimeout() {
     let tokenReceived = false;
     
     // Store original callback
-    const originalCallback = window.onTokenReceived;
+    const originalCallback = window.JSBridge.onTokenReceived;
     
     // Set up timeout (30 seconds)
     timeoutId = setTimeout(() => {
@@ -119,12 +119,12 @@ function requestTokenWithTimeout() {
             showConsentRequiredMessage();
             
             // Restore original callback
-            window.onTokenReceived = originalCallback;
+            window.JSBridge.onTokenReceived = originalCallback;
         }
     }, 30000);
     
     // Override callback temporarily
-    window.onTokenReceived = function(token) {
+    window.JSBridge.onTokenReceived = function(token) {
         tokenReceived = true;
         clearTimeout(timeoutId);
         
@@ -134,7 +134,7 @@ function requestTokenWithTimeout() {
         }
         
         // Restore original callback
-        window.onTokenReceived = originalCallback;
+        window.JSBridge.onTokenReceived = originalCallback;
     };
     
     // Request token

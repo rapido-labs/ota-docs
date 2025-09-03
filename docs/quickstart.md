@@ -34,8 +34,10 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
     <!-- Your PWA content -->
     
     <script>
-        // REQUIRED: These functions will be called by Rapido
-        function onTokenReceived(token) {
+        // REQUIRED: These functions will be called by Rapido via JSBridge
+        window.JSBridge = window.JSBridge || {};
+        
+        window.JSBridge.onTokenReceived = function(token) {
             console.log('Received token from Rapido:', token);
             
             // Send token to your backend for validation
@@ -67,17 +69,17 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
             .catch(error => {
                 console.error('Error during authentication:', error);
             });
-        }
+        };
 
-        function onUserSkippedLogin() {
+        window.JSBridge.onUserSkippedLogin = function() {
             console.log('User skipped login');
             // Handle user declining authentication
-        }
+        };
 
-        function onError(error) {
+        window.JSBridge.onError = function(error) {
             console.error('JSBridge Error:', error);
             // Handle bridge errors
-        }
+        };
 
         // Bridge readiness check with timeout protection
         function checkBridgeReady() {

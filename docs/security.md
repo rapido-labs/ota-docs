@@ -90,7 +90,9 @@ Rapido's integration employs multiple layers of security to protect user data an
 
 ```javascript
 // ✅ Secure token handling implementation
-function onTokenReceived(token) {
+window.JSBridge = window.JSBridge || {};
+
+window.JSBridge.onTokenReceived = function(token) {
     // Validate token format without logging it
     if (!token || typeof token !== 'string' || token.length < 50) {
         console.error('Invalid token format received');

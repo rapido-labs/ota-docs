@@ -57,8 +57,8 @@ function initiateAuthWithTimeout() {
     }, 30000); // 30 seconds timeout
     
     // Override the original callback
-    const originalCallback = window.onTokenReceived;
-    window.onTokenReceived = function(token) {
+    const originalCallback = window.JSBridge.onTokenReceived;
+    window.JSBridge.onTokenReceived = function(token) {
         authReceived = true;
         clearTimeout(timeoutId);
         originalCallback(token);
@@ -113,17 +113,17 @@ Common reasons and solutions:
    })();
    
    // ✅ Correct - globally accessible
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    ```
 
 2. **Function defined after token request**
    ```javascript
    // ❌ Wrong order
    window.NativeJSBridge.requestUserToken();
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct order
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    window.NativeJSBridge.requestUserToken();
    ```
 
@@ -151,8 +151,8 @@ function createMockBridge() {
                 console.log('Mock: Requesting token');
                 // Simulate consent screen delay
                 setTimeout(() => {
-                    if (window.onTokenReceived) {
-                        window.onTokenReceived('mock-token-' + Date.now());
+                    if (window.JSBridge.onTokenReceived) {
+                        window.JSBridge.onTokenReceived('mock-token-' + Date.now());
                     }
                 }, 2000);
             },

@@ -152,7 +152,7 @@ Your client ID is provided by Rapido's team. Store it securely:
 ```javascript
 // Configuration object
 const RAPIDO_CONFIG = {
-    CLIENT_ID: 'your-partner-client-id', // Provided by Rapido
+    CLIENT_ID: 'your-client-id', // Provided by Rapido
     API_BASE_URL: 'https://your-api.com',
     DEBUG_MODE: false // Set to false in production
 };
@@ -166,10 +166,10 @@ After requesting a token, Rapido shows a consent screen to the user. Upon approv
 
 ```javascript
 setupCallbacks: function() {
-    // CRITICAL: These functions must be globally accessible
-    window.onTokenReceived = this.handleTokenReceived.bind(this);
-    window.onUserSkippedLogin = this.handleUserSkippedLogin.bind(this);
-    window.onError = this.handleError.bind(this);
+    // CRITICAL: These functions must be accessible via JSBridge
+    window.JSBridge.onTokenReceived = this.handleTokenReceived.bind(this);
+    window.JSBridge.onUserSkippedLogin = this.handleUserSkippedLogin.bind(this);
+    window.JSBridge.onError = this.handleError.bind(this);
 },
 
 handleTokenReceived: function(token) {
