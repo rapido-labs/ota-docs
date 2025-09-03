@@ -117,8 +117,8 @@ requestAuthentication: function() {
     try {
         if (window.NativeJSBridge && typeof window.NativeJSBridge.requestUserToken === 'function') {
             // Request token from Rapido
-            // Replace with your actual client ID from Rapido partner portal
-            window.NativeJSBridge.requestUserToken('your-partner-client-id');
+            // Request user token - client ID handled automatically by native app
+            window.NativeJSBridge.requestUserToken();
         } else {
             throw new Error('Rapido NativeJSBridge interface not available');
         }

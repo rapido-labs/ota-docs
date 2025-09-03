@@ -30,12 +30,12 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 2. **Verify function timing**
    ```javascript
    // ❌ Wrong - function defined after token request
-   window.NativeJSBridge.requestUserToken('client-id');
+   window.NativeJSBridge.requestUserToken();
    window.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct - function defined before token request
    window.onTokenReceived = function(token) { /* ... */ };
-   window.NativeJSBridge.requestUserToken('client-id');
+   window.NativeJSBridge.requestUserToken();
    ```
 
 3. **Check bridge availability**
@@ -139,7 +139,7 @@ function requestTokenWithTimeout() {
     
     // Request token
     if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-        window.NativeJSBridge.requestUserToken('your-client-id');
+        window.NativeJSBridge.requestUserToken();
     } else {
         console.error('Rapido bridge not available');
         clearTimeout(timeoutId);

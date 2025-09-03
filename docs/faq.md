@@ -65,7 +65,7 @@ function initiateAuthWithTimeout() {
     };
     
     // Request token
-    window.NativeJSBridge.requestUserToken('your-client-id');
+    window.NativeJSBridge.requestUserToken();
 }
 ```
 
@@ -119,12 +119,12 @@ Common reasons and solutions:
 2. **Function defined after token request**
    ```javascript
    // ❌ Wrong order
-   window.NativeJSBridge.requestUserToken('client-id');
+   window.NativeJSBridge.requestUserToken();
    window.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct order
    window.onTokenReceived = function(token) { /* ... */ };
-   window.NativeJSBridge.requestUserToken('client-id');
+   window.NativeJSBridge.requestUserToken();
    ```
 
 3. **Running outside Rapido app**
@@ -147,8 +147,8 @@ For development and testing, you can create a mock bridge:
 function createMockBridge() {
     if (window.location.hostname === 'localhost' && !window.NativeJSBridge) {
         window.NativeJSBridge = {
-            requestUserToken: function(clientId) {
-                console.log('Mock: Requesting token for', clientId);
+            requestUserToken: function() {
+                console.log('Mock: Requesting token');
                 // Simulate consent screen delay
                 setTimeout(() => {
                     if (window.onTokenReceived) {
@@ -191,8 +191,8 @@ Never use production tokens in development environments.
 - **API Key**: Secret key for backend authentication with Rapido's APIs
 
 ```javascript
-// Client ID - OK to use in frontend
-window.NativeJSBridge.requestUserToken('your-client-id');
+// Client identification handled automatically by native app
+window.NativeJSBridge.requestUserToken();
 
 // API Key - ONLY use in backend
 const headers = {
@@ -246,7 +246,7 @@ Check these common causes:
            window.NativeJSBridge.storeSessionId('');
        }
        // Request new authentication
-       window.NativeJSBridge.requestUserToken('your-client-id');
+       window.NativeJSBridge.requestUserToken();
    }
    ```
 

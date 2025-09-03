@@ -10,26 +10,27 @@ The Rapido JavaScript Bridge provides secure communication between your PWA and 
 
 ## Bridge Overview
 
-The JavaScript Bridge is exposed through the `window.NativeJSBridge` object when your PWA runs inside the Rapido app. It provides three core functionalities:
+The JavaScript Bridge is exposed through the `window.NativeJSBridge` object when your PWA runs inside the Rapido app. It provides four core functionalities:
 
 1. **Authentication Token** - Request user authentication tokens
-2. **Session Storage** - Securely store and retrieve session IDs
-3. **Event Handling** - Receive callbacks from Rapido
+2. **Login Status** - Notify app about authentication results
+3. **Session Storage** - Securely store and retrieve session IDs
+4. **Event Handling** - Receive callbacks from Rapido
 
 ## Available Methods
 
-### requestUserToken(clientId)
+### requestUserToken()
 
 Initiates the user authentication flow by requesting a token from Rapido.
 
 #### Parameters
-- `clientId` (string, required): Your partner client ID provided by Rapido
+- None - Client identification is handled automatically by the native app
 
 #### Usage
 ```javascript
 function initiateLogin() {
     if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-        window.NativeJSBridge.requestUserToken('your-partner-client-id');
+        window.NativeJSBridge.requestUserToken();
     } else {
         console.error('Rapido NativeJSBridge not available');
     }
@@ -44,7 +45,7 @@ function initiateLogin() {
 
 #### Error Handling
 ```javascript
-function safeRequestToken(clientId) {
+function safeRequestToken() {
     try {
         if (!window.NativeJSBridge) {
             throw new Error('Running outside Rapido app');
@@ -54,7 +55,7 @@ function safeRequestToken(clientId) {
             throw new Error('requestUserToken method not available');
         }
         
-        window.NativeJSBridge.requestUserToken(clientId);
+        window.NativeJSBridge.requestUserToken();
         
     } catch (error) {
         console.error('Failed to request token:', error);
@@ -62,6 +63,75 @@ function safeRequestToken(clientId) {
         showManualLoginOption();
     }
 }
+```
+
+### updateLoginStatus(isSuccess, errorMessage)
+
+Notifies the native app about the login result after receiving a token. This should be called by the PWA after processing the `onTokenReceived` callback.
+
+#### Parameters
+- `isSuccess` (boolean, required): `true` if authentication was successful, `false` if failed
+- `errorMessage` (string, optional): Error message if `isSuccess` is `false`, otherwise pass `null`
+
+#### Usage
+```javascript
+// Call this in your onTokenReceived callback
+function onTokenReceived(token) {
+    console.log('Token received from Rapido');
+    // Process the token (validate, create session, etc.)
+    processToken(token)
+        .then((sessionData) => {
+            // IMPORTANT: Store session/cookie first
+            storeUserSession(sessionData);
+
+            // Then notify app that login was successful
+            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                window.NativeJSBridge.updateLoginStatus(true, null);
+            }
+
+            // Show dashboard or redirect user
+            showDashboard();
+        })
+        .catch((error) => {
+            // Notify app that login failed
+            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                window.NativeJSBridge.updateLoginStatus(false, error.message);
+            }
+
+            // Handle error appropriately
+            showErrorMessage(error.message);
+        });
+}
+```
+
+> **Important Note**: In success case, the `updateLoginStatus` function should be called **after** storing the session/cookie. Once the popup is closed, user should ideally be in logged-in state.
+
+#### Best Practices
+```javascript
+// Always call updateLoginStatus after processing onTokenReceived
+window.JSBridge.onTokenReceived = function(token) {
+    try {
+        // Your authentication logic here
+        const sessionData = processAuthToken(token);
+
+        if (sessionData) {
+            // Store session/cookie data first
+            localStorage.setItem('userSession', JSON.stringify(sessionData));
+
+            // Then notify success - user is now in logged-in state
+            window.NativeJSBridge.updateLoginStatus(true, null);
+            redirectToUserDashboard();
+        } else {
+            // Notify failure with reason
+            window.NativeJSBridge.updateLoginStatus(false, 'Token processing failed');
+            showRetryOption();
+        }
+    } catch (error) {
+        // Always notify failure on exceptions
+        window.NativeJSBridge.updateLoginStatus(false, error.message);
+        handleAuthenticationError(error);
+    }
+};
 ```
 
 ### storeSessionId(sessionId)
@@ -302,7 +372,7 @@ function checkBridgeReady() {
     if (window.NativeJSBridge && typeof window.NativeJSBridge.requestUserToken === 'function') {
         // Bridge confirmed ready - proceed immediately
         console.log('✅ Bridge ready in ' + (Date.now() - startTime) + 'ms');
-        window.NativeJSBridge.requestUserToken('your_client_id');
+        window.NativeJSBridge.requestUserToken();
     } else if (Date.now() - startTime < maxWaitTime) {
         // Bridge not ready - check again in 10ms
         setTimeout(checkBridgeReady, 10);
@@ -334,6 +404,7 @@ function checkBridgeCapabilities() {
         available: true,
         capabilities: {
             requestUserToken: typeof window.NativeJSBridge.requestUserToken === 'function',
+            updateLoginStatus: typeof window.NativeJSBridge.updateLoginStatus === 'function',
             storeSessionId: typeof window.NativeJSBridge.storeSessionId === 'function',
             fetchSessionId: typeof window.NativeJSBridge.fetchSessionId === 'function'
         }
@@ -419,8 +490,8 @@ const RapidoBridgeDebug = {
         if (!window.NativeJSBridge) {
             console.log('Creating mock NativeJSBridge for testing');
             window.NativeJSBridge = {
-                requestUserToken: (clientId) => {
-                    console.log('Mock: requestUserToken called with', clientId);
+                requestUserToken: () => {
+                    console.log('Mock: requestUserToken called');
                     setTimeout(() => {
                         if (window.onTokenReceived) {
                             window.onTokenReceived('mock-token-' + Date.now());
