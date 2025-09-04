@@ -119,12 +119,12 @@ Common reasons and solutions:
 2. **Function defined after token request**
    ```javascript
    // ❌ Wrong order
-   window.NativeJSBridge.requestUserToken();
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct order
    window.JSBridge.onTokenReceived = function(token) { /* ... */ };
-   window.NativeJSBridge.requestUserToken();
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    ```
 
 3. **Running outside Rapido app**
@@ -284,8 +284,8 @@ Check these common causes:
        if (window.NativeJSBridge?.storeSessionId) {
            window.NativeJSBridge.storeSessionId('');
        }
-       // Request new authentication
-       window.NativeJSBridge.requestUserToken();
+       // Request new authentication with profile scope
+       window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    }
    ```
 

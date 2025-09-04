@@ -116,9 +116,9 @@ requestAuthentication: function() {
     
     try {
         if (window.NativeJSBridge && typeof window.NativeJSBridge.requestUserToken === 'function') {
-            // Request token from Rapido
-            // Request user token - client ID handled automatically by native app
-            window.NativeJSBridge.requestUserToken();
+            // Request token from Rapido with profile scope
+            // Request user token with metadata for profile access
+            window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
         } else {
             throw new Error('Rapido NativeJSBridge interface not available');
         }

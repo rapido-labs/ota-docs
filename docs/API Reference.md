@@ -74,7 +74,7 @@ x-client-id: CLIENT_ID
 
 | Method | Purpose |
 |--------|---------|
-| `requestUserToken()` | Request authentication token from Rapido |
+| `requestUserToken(metadata)` | Request authentication token from Rapido with metadata |
 | `updateLoginStatus(isSuccess, errorMessage)` | Notify native app of login result |
 | `storeSessionId(sessionId)` | Store session ID in secure storage |
 | `fetchSessionId()` | Retrieve stored session ID |
@@ -110,8 +110,8 @@ window.JSBridge.onTokenReceived = function(token) {
     });
 };
 
-// Request authentication
-window.NativeJSBridge.requestUserToken();
+// Request authentication with profile scope
+window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
 ```
 
 ---

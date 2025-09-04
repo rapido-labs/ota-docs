@@ -147,10 +147,10 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
         }
 
         function requestNewToken() {
-            // Request token from Rapido
+            // Request token from Rapido with profile scope
             if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-                // Request user token - client ID handled automatically
-                window.NativeJSBridge.requestUserToken();
+                // Request user token with metadata for profile access
+                window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
             } else {
                 console.error('Rapido NativeJSBridge interface not available');
             }

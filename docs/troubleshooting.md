@@ -30,12 +30,12 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 2. **Verify function timing**
    ```javascript
    // ❌ Wrong - function defined after token request
-   window.NativeJSBridge.requestUserToken();
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct - function defined before token request
    window.JSBridge.onTokenReceived = function(token) { /* ... */ };
-   window.NativeJSBridge.requestUserToken();
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    ```
 
 3. **Check bridge availability**
@@ -139,9 +139,9 @@ function requestTokenWithTimeout() {
         window.JSBridge.onTokenReceived = originalCallback;
     };
     
-    // Request token
+    // Request token with profile scope
     if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-        window.NativeJSBridge.requestUserToken();
+        window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
     } else {
         console.error('Rapido bridge not available');
         clearTimeout(timeoutId);
