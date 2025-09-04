@@ -175,7 +175,7 @@ class RapidoTokenValidator {
     
     getBaseURL(environment) {
         const urls = {
-            production: 'https://partner-api.rapido.bike/ota',
+            production: '<rapido-host-url-prod>/api/ota',
             staging: 'https://rapido_ota_host/api/ota',
             sandbox: 'https://sandbox-api.rapido.bike/partner'
         };
@@ -248,10 +248,10 @@ class RapidoTokenValidator {
 app.post('/api/auth/rapido-login', async (req, res) => {
     try {
         const { token } = req.body;
-        const clientId = process.env.RAPIDO_CLIENT_ID;
+        const clientId = process.env.CLIENT_ID;
         
         const validator = new RapidoTokenValidator(
-            process.env.RAPIDO_PARTNER_API_KEY,
+            process.env.CLIENT_KEY,
             process.env.NODE_ENV === 'production' ? 'production' : 'staging'
         );
         
@@ -311,7 +311,7 @@ class RapidoTokenValidator:
         
     def _get_base_url(self, environment: str) -> str:
         urls = {
-            'production': 'https://partner-api.rapido.bike/ota',
+            'production': '<rapido-host-url-prod>/api/ota',
             'staging': 'https://rapido_ota_host/api/ota',
             'sandbox': 'https://sandbox-api.rapido.bike/partner'
         }
@@ -376,11 +376,11 @@ class RapidoTokenValidator:
 def authenticate_user(token: str) -> Dict[Any, Any]:
     try:
         validator = RapidoTokenValidator(
-            api_key=os.environ['RAPIDO_PARTNER_API_KEY'],
+            api_key=os.environ['CLIENT_KEY'],
             environment='production' if os.environ.get('ENV') == 'production' else 'staging'
         )
         
-        client_id = os.environ['RAPIDO_CLIENT_ID']
+        client_id = os.environ['CLIENT_ID']
         result = validator.validate_token(token, client_id)
         
         if result.get('success') and result.get('data', {}).get('valid'):

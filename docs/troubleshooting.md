@@ -45,6 +45,8 @@ This is the most common issue developers face. Here's how to diagnose and fix it
        
        if (window.NativeJSBridge) {
            console.log('requestUserToken available:', typeof window.NativeJSBridge.requestUserToken);
+           console.log('updateLoginStatus available:', typeof window.NativeJSBridge.updateLoginStatus);
+           console.log('clearUserToken available:', typeof window.NativeJSBridge.clearUserToken);
            console.log('storeSessionId available:', typeof window.NativeJSBridge.storeSessionId);
            console.log('fetchSessionId available:', typeof window.NativeJSBridge.fetchSessionId);
        } else {
@@ -157,10 +159,10 @@ function requestTokenWithTimeout() {
 ```javascript
 // Check API key configuration
 function validateAPIConfig() {
-    const apiKey = process.env.RAPIDO_PARTNER_API_KEY;
+    const apiKey = process.env.CLIENT_KEY;
     
     if (!apiKey) {
-        console.error('RAPIDO_PARTNER_API_KEY not set');
+        console.error('CLIENT_KEY not set');
         return false;
     }
     
@@ -184,19 +186,19 @@ function validateAPIConfig() {
 1. **Check environment variables**
    ```bash
    # Verify environment variables are set
-   echo $RAPIDO_PARTNER_API_KEY
-   echo $RAPIDO_CLIENT_ID
+   echo $CLIENT_KEY
+   echo $CLIENT_ID
    
    # For Node.js applications
-   node -e "console.log('API Key:', process.env.RAPIDO_PARTNER_API_KEY ? 'SET' : 'NOT SET')"
+   node -e "console.log('API Key:', process.env.CLIENT_KEY ? 'SET' : 'NOT SET')"
    ```
 
 2. **Verify API endpoint**
    ```javascript
    // Ensure you're using the correct environment
    const baseURL = process.env.NODE_ENV === 'production'
-       ? 'https://partner-api.rapido.bike/ota'      // Production
-       : 'https://rapido_ota_host/api/ota'; // Staging
+       ? '<rapido-host-url-prod>/api/ota'      // Production
+       : '<rapido-host-url-staging>/api/ota'; // Staging
    
    console.log('Using API endpoint:', baseURL);
    ```
@@ -467,8 +469,8 @@ systemctl show-environment | grep RAPIDO
    // Add to your application startup
    function validateEnvironment() {
        const required = [
-           'RAPIDO_PARTNER_API_KEY',
-           'RAPIDO_CLIENT_ID',
+           'CLIENT_KEY',
+           'CLIENT_ID',
            'SESSION_SECRET'
        ];
        
@@ -490,15 +492,15 @@ systemctl show-environment | grep RAPIDO
    // config/index.js
    const environments = {
        development: {
-           rapidoAPI: 'https://staging-api.rapido.bike/partner',
+           rapidoAPI: '<rapido-host-url-staging>/api/ota',
            logLevel: 'debug'
        },
        staging: {
-           rapidoAPI: 'https://staging-api.rapido.bike/partner',
+           rapidoAPI: '<rapido-host-url-staging>/api/ota',
            logLevel: 'info'
        },
        production: {
-           rapidoAPI: 'https://partner-api.rapido.bike/ota',
+           rapidoAPI: '<rapido-host-url-prod>/api/ota',
            logLevel: 'warn'
        }
    };
@@ -537,16 +539,16 @@ async function runIntegrationTest() {
     
     // Test 1: Environment variables
     console.log('1. Checking environment variables...');
-    const apiKey = process.env.RAPIDO_PARTNER_API_KEY;
-    const clientId = process.env.RAPIDO_CLIENT_ID;
+    const apiKey = process.env.CLIENT_KEY;
+    const clientId = process.env.CLIENT_ID;
     
     if (!apiKey) {
-        console.error('❌ RAPIDO_PARTNER_API_KEY not set');
+        console.error('❌ CLIENT_KEY not set');
         return;
     }
     
     if (!clientId) {
-        console.error('❌ RAPIDO_CLIENT_ID not set');
+        console.error('❌ CLIENT_ID not set');
         return;
     }
     

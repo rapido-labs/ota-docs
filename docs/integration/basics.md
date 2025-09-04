@@ -277,9 +277,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rapido API configuration
 const RAPIDO_API = {
-    BASE_URL: 'https://rapido_ota_host/api',
-    PARTNER_ID: process.env.RAPIDO_PARTNER_ID, // Store securely
-    PARTNER_KEY: process.env.RAPIDO_PARTNER_API_KEY, // Store securely
+    BASE_URL: '<rapido-host-url-staging>/api',
+    CLIENT_ID: process.env.CLIENT_ID, // Store securely
+    CLIENT_KEY: process.env.CLIENT_KEY, // Store securely
     TIMEOUT: 10000 // 10 seconds
 };
 
@@ -306,8 +306,8 @@ app.post('/api/auth/rapido-login', async (req, res) => {
             },
             {
                 headers: {
-                    'authorization': `${RAPIDO_API.PARTNER_KEY}`,
-                    'x-client-id': `${PARTNER_ID}`,
+                    'authorization': `${RAPIDO_API.CLIENT_KEY}`,
+                    'x-client-id': `${RAPIDO_API.CLIENT_ID}`,
                     'Content-Type': 'application/json',
                     'User-Agent': 'YourApp-Partner/1.0'
                 },
@@ -479,7 +479,7 @@ Here's a complete, production-ready implementation:
     <script>
         // Configuration
         const RAPIDO_CONFIG = {
-            CLIENT_ID: 'your-partner-client-id',
+            CLIENT_ID: 'your-client-id',
             API_BASE_URL: 'https://your-api.com',
             DEBUG_MODE: false
         };

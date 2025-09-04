@@ -60,14 +60,30 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
                             console.warn('Failed to store session:', result);
                         }
                     }
+                    
+                    // IMPORTANT: Notify native app of successful login
+                    if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                        window.NativeJSBridge.updateLoginStatus(true, null);
+                    }
+                    
                     // Redirect to authenticated view
                     window.location.href = '/dashboard';
                 } else {
                     console.error('Authentication failed:', data.error);
+                    
+                    // Notify native app of login failure
+                    if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                        window.NativeJSBridge.updateLoginStatus(false, data.error || 'Authentication failed');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error during authentication:', error);
+                
+                // Notify native app of authentication error
+                if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                    window.NativeJSBridge.updateLoginStatus(false, 'Network error during authentication');
+                }
             });
         };
 
@@ -79,6 +95,12 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
         window.JSBridge.onError = function(error) {
             console.error('JSBridge Error:', error);
             // Handle bridge errors
+        };
+        
+        window.JSBridge.onTokenCleared = function() {
+            console.log('User logged out successfully');
+            // Handle logout - redirect to login page or show logged out state
+            window.location.href = '/login';
         };
 
         // Bridge readiness check with timeout protection
@@ -136,6 +158,20 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
 
         function validateSession(sessionId) {
             // Logic to validate sessionId if any.
+        }
+        
+        function logout() {
+            console.log('Logging out user');
+            
+            // Clear authentication data from native app
+            if (window.NativeJSBridge && window.NativeJSBridge.clearUserToken) {
+                window.NativeJSBridge.clearUserToken();
+                // This will trigger onTokenCleared callback
+            } else {
+                console.warn('clearUserToken not available');
+                // Fallback: redirect to login manually
+                window.location.href = '/login';
+            }
         }
 
         // Initialize authentication when page loads
