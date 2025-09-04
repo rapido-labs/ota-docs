@@ -202,7 +202,7 @@ app.post('/api/auth/rapido-login', async (req, res) => {
         const { token } = req.body;
         
         // Validate token with Rapido's API
-        const rapidoResponse = await axios.post('https://rapido_ota_host/api/ota/fetch-user-details', 
+        const rapidoResponse = await axios.post('<rapido-host-url-staging>/api/ota/fetch-user-details', 
             { token: token },
             {
                 headers: {

@@ -4,9 +4,8 @@ sidebar_position: 3
 # Integration Flow
 
 The diagram below explains the end-to-end interaction between the Rapido App, Partner PWA, Rapido Server, and Partner Server.
-```
-![Integration Flow](./pwa%20integration%20flow%20diagram.png)
-```
+
+![Integration Flow](/img/rapido-pwa-integration-flow.png)
 ### Flow Explanation
 
 - **(a)** Rapido App launches the Partner PWA, triggering login.

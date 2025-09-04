@@ -176,8 +176,8 @@ class RapidoTokenValidator {
     getBaseURL(environment) {
         const urls = {
             production: '<rapido-host-url-prod>/api/ota',
-            staging: 'https://rapido_ota_host/api/ota',
-            sandbox: 'https://sandbox-api.rapido.bike/partner'
+            staging: '<rapido-host-url-staging>/api/ota',
+            sandbox: '<rapido-host-url-sandbox>/api/ota'
         };
         return urls[environment] || urls.production;
     }
@@ -312,8 +312,8 @@ class RapidoTokenValidator:
     def _get_base_url(self, environment: str) -> str:
         urls = {
             'production': '<rapido-host-url-prod>/api/ota',
-            'staging': 'https://rapido_ota_host/api/ota',
-            'sandbox': 'https://sandbox-api.rapido.bike/partner'
+            'staging': '<rapido-host-url-staging>/api/ota',
+            'sandbox': '<rapido-host-url-sandbox>/api/ota'
         }
         return urls.get(environment, urls['production'])
     
