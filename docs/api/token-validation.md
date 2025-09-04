@@ -24,7 +24,9 @@ POST /ota/fetch-user-details HTTP/1.1
 Host: api.rapido.bike
 Content-Type: application/json
 authorization: CLIENT_KEY
-x-client-id: client_id
+x-client-id: CLIENT_ID
+x-client-service: <your_service_offering>
+x-client-appid: <your_app_id>
 User-Agent: YourApp/1.0.0
 ```
 
@@ -76,14 +78,13 @@ function validateTokenRequest(token, clientId) {
     "success": true,
     "code": 7000,
     "data": {
-        "valid": true,
         "user": {
-            "name": "John Doe",
-            "mobile": "+91-9876543210"
-        },
+            "name": "Satya",
+            "mobile": "7259206810"
+        }
     },
-    "timestamp": "2024-01-15T10:00:30Z",
-    "requestId": "req_1234567890"
+    "timestamp": "2025-09-04T12:52:38.061Z",
+    "requestId": "092a3dd0-898e-11f0-bf23-81aa54c4116d"
 }
 ```
 
@@ -92,10 +93,11 @@ function validateTokenRequest(token, clientId) {
 | Field | Type | Description |
 |-------|------|-------------|
 | `success` | boolean | Always `true` for successful requests |
-| `code` | number | user defined code for success |
+| `code` | number | Response code for success (7000) |
 | `data.user.name` | string | User's full name |
-| `data.user.mobile` | string | User's phone number (if consented) |
-| `data.user.profile` | object | Detailed profile information |
+| `data.user.mobile` | string | User's phone number |
+| `timestamp` | string | ISO timestamp of the response |
+| `requestId` | string | Unique request identifier |
 
 ### Error Responses
 
@@ -105,13 +107,10 @@ function validateTokenRequest(token, clientId) {
     "success": false,
     "code": 7001,
     "error": {
-        "message": "Token Invalid",
-        "details": {
-            "field": "token is missing",
-        }
+        "message": "Token Invalid"
     },
-    "timestamp": "2024-01-15T10:00:30Z",
-    "requestId": "req_1234567890"
+    "timestamp": "2025-09-04T12:45:47.474Z",
+    "requestId": "146fa320-898d-11f0-bf23-81aa54c4116d"
 }
 ```
 
@@ -198,7 +197,9 @@ class RapidoTokenValidator {
                         'authorization': `${this.apiKey}`,
                         'Content-Type': 'application/json',
                         'User-Agent': 'YourApp/1.0.0',
-                        'x-client-id': clientId
+                        'x-client-id': clientId,
+                        'x-client-service': '<your_service_offering>',
+                        'x-client-appid': '<your_app_id>'
                     },
                     timeout: 10000 // 10 seconds
                 }
@@ -329,7 +330,9 @@ class RapidoTokenValidator:
             'authorization': f'{self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'YourApp/1.0.0',
-            'x-client-id': client_id
+            'x-client-id': client_id,
+            'x-client-service': '<your_service_offering>',
+            'x-client-appid': '<your_app_id>'
         }
         data = {
             'token': token

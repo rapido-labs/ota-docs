@@ -95,6 +95,8 @@ All API responses follow a consistent error format:
 Content-Type: application/json
 authorization: CLIENT_KEY
 x-client-id: CLIENT_ID
+x-client-service: <your_service_offering>
+x-client-appid: <your_app_id>
 User-Agent: YourApp/1.0.0
 ```
 

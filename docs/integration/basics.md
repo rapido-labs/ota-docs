@@ -308,6 +308,8 @@ app.post('/api/auth/rapido-login', async (req, res) => {
                 headers: {
                     'authorization': `${RAPIDO_API.CLIENT_KEY}`,
                     'x-client-id': `${RAPIDO_API.CLIENT_ID}`,
+                    'x-client-service': '<your_service_offering>',
+                    'x-client-appid': '<your_app_id>',
                     'Content-Type': 'application/json',
                     'User-Agent': 'YourApp-Partner/1.0'
                 },

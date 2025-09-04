@@ -26,6 +26,8 @@ Host: <rapido-host-url>
 Content-Type: application/json
 authorization: CLIENT_KEY
 x-client-id: CLIENT_ID
+x-client-service: <your_service_offering>
+x-client-appid: <your_app_id>
 ```
 
 #### Request Body
@@ -41,14 +43,13 @@ x-client-id: CLIENT_ID
   "success": true,
   "code": 7000,
   "data": {
-    "valid": true,
     "user": {
-      "name": "John Doe",
-      "mobile": "+91-9876543210"
+      "name": "Joe Doe",
+      "mobile": "7259206810"
     }
   },
-  "timestamp": "2024-01-15T10:00:30Z",
-  "requestId": "req_1234567890"
+  "timestamp": "2025-09-04T12:52:38.061Z",
+  "requestId": "092a3dd0-898e-11f0-bf23-81aa54c4116d"
 }
 ```
 
@@ -58,13 +59,10 @@ x-client-id: CLIENT_ID
   "success": false,
   "code": 7001,
   "error": {
-    "message": "Token Invalid",
-    "details": {
-      "field": "token is missing"
-    }
+    "message": "Token Invalid"
   },
-  "timestamp": "2024-01-15T10:00:30Z",
-  "requestId": "req_1234567890"
+  "timestamp": "2025-09-04T12:45:47.474Z",
+  "requestId": "146fa320-898d-11f0-bf23-81aa54c4116d"
 }
 ```
 

@@ -99,7 +99,9 @@ class RapidoAPIClient {
                 token: token
             }, {
                 headers: {
-                    'x-client-id': this.config.clientId
+                    'x-client-id': this.config.clientId,
+                    'x-client-service': '<your_service_offering>',
+                    'x-client-appid': '<your_app_id>'
                 }
             });
             
@@ -415,7 +417,9 @@ class RapidoAPIClient:
             'authorization': f'{self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'PartnerApp/1.0.0',
-            'x-client-id': self.client_id
+            'x-client-id': self.client_id,
+            'x-client-service': '<your_service_offering>',
+            'x-client-appid': '<your_app_id>'
         }
         data = {
             'token': token
@@ -655,7 +659,9 @@ class RapidoAPIService
                 'authorization' => $this->apiKey,
                 'Content-Type' => 'application/json',
                 'User-Agent' => 'PartnerApp/1.0.0',
-                'x-client-id' => $this->clientId
+                'x-client-id' => $this->clientId,
+                'x-client-service' => '<your_service_offering>',
+                'x-client-appid' => '<your_app_id>'
             ])
             ->timeout($this->timeout)
             ->post($this->baseUrl . '/fetch-user-details', [
