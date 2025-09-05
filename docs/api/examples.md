@@ -23,11 +23,11 @@ const app = express();
 // Configuration
 const config = {
     rapido: {
-        apiKey: process.env.RAPIDO_PARTNER_API_KEY,
-        clientId: process.env.RAPIDO_CLIENT_ID,
+        apiKey: process.env.CLIENT_KEY,
+        clientId: process.env.CLIENT_ID,
         baseURL: process.env.NODE_ENV === 'production' 
-            ? 'https://partner-api.rapido.bike/ota'
-            : 'https://rapido_ota_host/api/ota',
+            ? '<rapido-host-url-prod>/api/ota'
+            : '<rapido-host-url-staging>/api/ota',
         timeout: 10000
     },
     session: {
@@ -99,7 +99,9 @@ class RapidoAPIClient {
                 token: token
             }, {
                 headers: {
-                    'x-client-id': this.config.clientId
+                    'x-client-id': this.config.clientId,
+                    'x-client-service': '<your_service_offering>',
+                    'x-client-appid': '<your_app_id>'
                 }
             });
             
@@ -393,10 +395,10 @@ import json
 
 # Configuration
 RAPIDO_CONFIG = {
-    'API_KEY': os.environ.get('RAPIDO_PARTNER_API_KEY'),
-    'CLIENT_ID': os.environ.get('RAPIDO_CLIENT_ID'),
-    'BASE_URL': 'https://partner-api.rapido.bike/ota' if os.environ.get('ENV') == 'production' 
-               else 'https://rapido_ota_host/api/ota',
+    'API_KEY': os.environ.get('CLIENT_KEY'),
+    'CLIENT_ID': os.environ.get('CLIENT_ID'),
+    'BASE_URL': '<rapido-host-url-prod>/api/ota' if os.environ.get('ENV') == 'production' 
+               else '<rapido-host-url-staging>/api/ota',
     'TIMEOUT': 10
 }
 
@@ -415,7 +417,9 @@ class RapidoAPIClient:
             'authorization': f'{self.api_key}',
             'Content-Type': 'application/json',
             'User-Agent': 'PartnerApp/1.0.0',
-            'x-client-id': self.client_id
+            'x-client-id': self.client_id,
+            'x-client-service': '<your_service_offering>',
+            'x-client-appid': '<your_app_id>'
         }
         data = {
             'token': token
@@ -655,7 +659,9 @@ class RapidoAPIService
                 'authorization' => $this->apiKey,
                 'Content-Type' => 'application/json',
                 'User-Agent' => 'PartnerApp/1.0.0',
-                'x-client-id' => $this->clientId
+                'x-client-id' => $this->clientId,
+                'x-client-service' => '<your_service_offering>',
+                'x-client-appid' => '<your_app_id>'
             ])
             ->timeout($this->timeout)
             ->post($this->baseUrl . '/fetch-user-details', [

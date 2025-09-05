@@ -3,48 +3,119 @@ sidebar_position: 4
 ---
 # API Reference
 
-## Get Token for User
+This document provides a quick reference for Rapido's Partner Integration APIs. For detailed documentation, see the [API Overview](./api/overview.md) and [Token Validation API](./api/token-validation.md).
 
-- **Method:** POST  
-- **URL:** `https://partner-api.rapido.bike/ota/fetch-user-token`  
-- **Headers:**
+## Partner Backend APIs
+
+### Validate User Token
+
+**Purpose**: Validate authentication tokens received from your PWA and retrieve user information.
+
+**Endpoint**: `POST /fetch-user-details`
+
+**Base URLs**:
+- **Production**: `<rapido-host-url-prod>/api/ota`
+- **Staging**: `<rapido-host-url-staging>/api/ota`
+
+**Authentication**: Partner API Key required
+
+#### Request Format
+```http
+POST /api/ota/fetch-user-details HTTP/1.1
+Host: <rapido-host-url>
+Content-Type: application/json
+authorization: CLIENT_KEY
+x-client-id: CLIENT_ID
+x-client-service: <your_service_offering>
+x-client-appid: <your_app_id>
+```
+
+#### Request Body
 ```json
 {
-  "x-consumer-userId": "rapido-user-id"
-}
-Body
-{
-  "client": "client-id"
-}
-Response
-{
-  "token": "some-encrypted-token-A"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-```
-Get User Details for Token
-Method: POST
-URL: https://rapido_ota_host/api/ota/fetch-user-details
-Headers:
+#### Success Response (HTTP 200)
+```json
 {
-  "x-client-id": "client-id"
-}
-Body:
-{
-  "token": "some-encrypted-token-A"
-}
-Response Success
-{
-  "valid": true,
-  "details": {
-    "name": "RapidoUser",
-    "mobile": "9876543210"
-  }
-}
-Response Failure
-{
-  "valid": false,
-  "code": 7001
+  "success": true,
+  "code": 7000,
+  "data": {
+    "user": {
+      "name": "Joe Doe",
+      "mobile": "7259206810"
+    }
+  },
+  "timestamp": "2025-09-04T12:52:38.061Z",
+  "requestId": "092a3dd0-898e-11f0-bf23-81aa54c4116d"
 }
 ```
+
+#### Error Response (HTTP 401)
+```json
+{
+  "success": false,
+  "code": 7001,
+  "error": {
+    "message": "Token Invalid"
+  },
+  "timestamp": "2025-09-04T12:45:47.474Z",
+  "requestId": "146fa320-898d-11f0-bf23-81aa54c4116d"
+}
+```
+
+## JavaScript Bridge API
+
+### Methods Available to PWA
+
+| Method | Purpose |
+|--------|---------|
+| `requestUserToken(metadata)` | Request authentication token from Rapido with metadata |
+| `updateLoginStatus(isSuccess, errorMessage)` | Notify native app of login result |
+| `storeSessionId(sessionId)` | Store session ID in secure storage |
+| `fetchSessionId()` | Retrieve stored session ID |
+| `clearUserToken()` | Clear token and session data |
+
+### Callbacks Required by PWA
+
+| Callback | Purpose |
+|----------|---------|
+| `window.JSBridge.onTokenReceived(token)` | Receive authentication token |
+| `window.JSBridge.onUserSkippedLogin()` | Handle user declining authentication |
+| `window.JSBridge.onTokenCleared()` | Handle successful logout |
+| `window.JSBridge.onError(error)` | Handle bridge errors |
+
+## Quick Integration Example
+
+```javascript
+// Set up callbacks
+window.JSBridge = window.JSBridge || {};
+window.JSBridge.onTokenReceived = function(token) {
+    // Send to backend for validation
+    fetch('/api/auth/rapido-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Store session securely
+            window.NativeJSBridge.storeSessionId(data.sessionId);
+            window.NativeJSBridge.updateLoginStatus(true, null);
+        }
+    });
+};
+
+// Request authentication with profile scope
+window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
+```
+
+---
+
+**For Complete Documentation**:
+- [Integration Guide](./integration/basics.md) - Complete implementation flow
+- [JavaScript Bridge](./integration/javascript-bridge.md) - Detailed bridge documentation  
+- [API Examples](./api/examples.md) - Full code samples
+- [Security Guidelines](./security.md) - Production security requirements

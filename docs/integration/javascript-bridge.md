@@ -19,18 +19,18 @@ The JavaScript Bridge is exposed through the `window.NativeJSBridge` object when
 
 ## Available Methods
 
-### requestUserToken()
+### requestUserToken(metadata)
 
 Initiates the user authentication flow by requesting a token from Rapido.
 
 #### Parameters
-- None - Client identification is handled automatically by the native app
+- `metadata` (object, required): Authentication metadata specifying the required scope. Use `{ scope: ["profile"] }` to request user profile access.
 
 #### Usage
 ```javascript
 function initiateLogin() {
     if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-        window.NativeJSBridge.requestUserToken();
+        window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
     } else {
         console.error('Rapido NativeJSBridge not available');
     }
@@ -55,7 +55,7 @@ function safeRequestToken() {
             throw new Error('requestUserToken method not available');
         }
         
-        window.NativeJSBridge.requestUserToken();
+        window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
         
     } catch (error) {
         console.error('Failed to request token:', error);
@@ -372,7 +372,7 @@ function checkBridgeReady() {
     if (window.NativeJSBridge && typeof window.NativeJSBridge.requestUserToken === 'function') {
         // Bridge confirmed ready - proceed immediately
         console.log('✅ Bridge ready in ' + (Date.now() - startTime) + 'ms');
-        window.NativeJSBridge.requestUserToken();
+        window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
     } else if (Date.now() - startTime < maxWaitTime) {
         // Bridge not ready - check again in 10ms
         setTimeout(checkBridgeReady, 10);
@@ -473,14 +473,14 @@ const RapidoBridgeDebug = {
             }
         }
         
-        console.log('Global callback set:', typeof window.onTokenReceived);
+        console.log('JSBridge callback set:', typeof window.JSBridge.onTokenReceived);
         console.groupEnd();
     },
     
     testTokenCallback(mockToken = 'test-token-123') {
-        if (typeof window.onTokenReceived === 'function') {
+        if (typeof window.JSBridge.onTokenReceived === 'function') {
             console.log('Testing token callback with mock token');
-            window.onTokenReceived(mockToken);
+            window.JSBridge.onTokenReceived(mockToken);
         } else {
             console.error('onTokenReceived not defined');
         }
@@ -493,8 +493,8 @@ const RapidoBridgeDebug = {
                 requestUserToken: () => {
                     console.log('Mock: requestUserToken called');
                     setTimeout(() => {
-                        if (window.onTokenReceived) {
-                            window.onTokenReceived('mock-token-' + Date.now());
+                        if (window.JSBridge.onTokenReceived) {
+                            window.JSBridge.onTokenReceived('mock-token-' + Date.now());
                         }
                     }, 1000);
                 },

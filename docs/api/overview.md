@@ -16,9 +16,9 @@ Rapido's Partner API follows REST principles with JSON-based request/response fo
 
 | Environment | Base URL |
 |-------------|----------|
-| Production | `https://partner-api.rapido.bike/ota` |
-| Staging | `https://rapido_ota_host/api/ota` |
-| Sandbox | `https://sandbox-api.rapido.bike/partner` |
+| Production | `<rapido-host-url-prod>/` |
+| Staging | `<rapido-host-url-staging>/` |
+| Sandbox | `<rapido-host-url-sandbox>/` |
 
 ### Authentication
 
@@ -95,6 +95,8 @@ All API responses follow a consistent error format:
 Content-Type: application/json
 authorization: CLIENT_KEY
 x-client-id: CLIENT_ID
+x-client-service: <your_service_offering>
+x-client-appid: <your_app_id>
 User-Agent: YourApp/1.0.0
 ```
 

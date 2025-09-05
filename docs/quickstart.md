@@ -34,8 +34,10 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
     <!-- Your PWA content -->
     
     <script>
-        // REQUIRED: These functions will be called by Rapido
-        function onTokenReceived(token) {
+        // REQUIRED: These functions will be called by Rapido via JSBridge
+        window.JSBridge = window.JSBridge || {};
+        
+        window.JSBridge.onTokenReceived = function(token) {
             console.log('Received token from Rapido:', token);
             
             // Send token to your backend for validation
@@ -58,26 +60,48 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
                             console.warn('Failed to store session:', result);
                         }
                     }
+                    
+                    // IMPORTANT: Notify native app of successful login
+                    if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                        window.NativeJSBridge.updateLoginStatus(true, null);
+                    }
+                    
                     // Redirect to authenticated view
                     window.location.href = '/dashboard';
                 } else {
                     console.error('Authentication failed:', data.error);
+                    
+                    // Notify native app of login failure
+                    if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                        window.NativeJSBridge.updateLoginStatus(false, data.error || 'Authentication failed');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error during authentication:', error);
+                
+                // Notify native app of authentication error
+                if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                    window.NativeJSBridge.updateLoginStatus(false, 'Network error during authentication');
+                }
             });
-        }
+        };
 
-        function onUserSkippedLogin() {
+        window.JSBridge.onUserSkippedLogin = function() {
             console.log('User skipped login');
             // Handle user declining authentication
-        }
+        };
 
-        function onError(error) {
+        window.JSBridge.onError = function(error) {
             console.error('JSBridge Error:', error);
             // Handle bridge errors
-        }
+        };
+        
+        window.JSBridge.onTokenCleared = function() {
+            console.log('User logged out successfully');
+            // Handle logout - redirect to login page or show logged out state
+            window.location.href = '/login';
+        };
 
         // Bridge readiness check with timeout protection
         function checkBridgeReady() {
@@ -123,10 +147,10 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
         }
 
         function requestNewToken() {
-            // Request token from Rapido
+            // Request token from Rapido with profile scope
             if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-                // Request user token - client ID handled automatically
-                window.NativeJSBridge.requestUserToken();
+                // Request user token with metadata for profile access
+                window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
             } else {
                 console.error('Rapido NativeJSBridge interface not available');
             }
@@ -134,6 +158,20 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
 
         function validateSession(sessionId) {
             // Logic to validate sessionId if any.
+        }
+        
+        function logout() {
+            console.log('Logging out user');
+            
+            // Clear authentication data from native app
+            if (window.NativeJSBridge && window.NativeJSBridge.clearUserToken) {
+                window.NativeJSBridge.clearUserToken();
+                // This will trigger onTokenCleared callback
+            } else {
+                console.warn('clearUserToken not available');
+                // Fallback: redirect to login manually
+                window.location.href = '/login';
+            }
         }
 
         // Initialize authentication when page loads
@@ -164,12 +202,14 @@ app.post('/api/auth/rapido-login', async (req, res) => {
         const { token } = req.body;
         
         // Validate token with Rapido's API
-        const rapidoResponse = await axios.post('https://rapido_ota_host/api/ota/fetch-user-details', 
+        const rapidoResponse = await axios.post('<rapido-host-url-staging>/api/ota/fetch-user-details', 
             { token: token },
             {
                 headers: {
                     'authorization': 'CLIENT_KEY',
                     'x-client-id': 'CLIENT_ID',
+                    'x-client-service': '<your_service_offering>',
+                    'x-client-appid': '<your_app_id>',
                     'Content-Type': 'application/json'
                 }
             }

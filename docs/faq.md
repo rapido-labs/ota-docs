@@ -57,8 +57,8 @@ function initiateAuthWithTimeout() {
     }, 30000); // 30 seconds timeout
     
     // Override the original callback
-    const originalCallback = window.onTokenReceived;
-    window.onTokenReceived = function(token) {
+    const originalCallback = window.JSBridge.onTokenReceived;
+    window.JSBridge.onTokenReceived = function(token) {
         authReceived = true;
         clearTimeout(timeoutId);
         originalCallback(token);
@@ -113,18 +113,18 @@ Common reasons and solutions:
    })();
    
    // ✅ Correct - globally accessible
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    ```
 
 2. **Function defined after token request**
    ```javascript
    // ❌ Wrong order
-   window.NativeJSBridge.requestUserToken();
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct order
-   window.onTokenReceived = function(token) { /* ... */ };
-   window.NativeJSBridge.requestUserToken();
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    ```
 
 3. **Running outside Rapido app**
@@ -135,6 +135,45 @@ Common reasons and solutions:
        // Handle alternative authentication
    }
    ```
+
+### What other JSBridge methods are available?
+
+Besides `requestUserToken()`, the JSBridge provides additional methods for complete authentication flow management:
+
+#### 1. `updateLoginStatus(isSuccess, errorMessage)`
+**Purpose**: Notify the native app about login results after processing tokens.
+```javascript
+// Call after successfully processing onTokenReceived
+window.NativeJSBridge.updateLoginStatus(true, null);
+
+// Call on failure with error message
+window.NativeJSBridge.updateLoginStatus(false, 'Token validation failed');
+```
+
+#### 2. `clearUserToken()`
+**Purpose**: Clear both authentication token and session data from secure storage.
+```javascript
+// Clear all user authentication data
+window.NativeJSBridge.clearUserToken();
+// This triggers onTokenCleared callback
+```
+
+#### 3. Additional Callbacks
+Your PWA should also implement these callbacks:
+
+```javascript
+// Called when token/session is successfully cleared
+window.JSBridge.onTokenCleared = function() {
+    console.log('User logged out successfully');
+    // Redirect to login page or show logged out state
+};
+
+// Called when JSBridge encounters errors
+window.JSBridge.onError = function(error) {
+    console.error('JSBridge Error:', error);
+    // Handle bridge-level errors appropriately
+};
+```
 
 ## Development & Testing
 
@@ -151,8 +190,8 @@ function createMockBridge() {
                 console.log('Mock: Requesting token');
                 // Simulate consent screen delay
                 setTimeout(() => {
-                    if (window.onTokenReceived) {
-                        window.onTokenReceived('mock-token-' + Date.now());
+                    if (window.JSBridge.onTokenReceived) {
+                        window.JSBridge.onTokenReceived('mock-token-' + Date.now());
                     }
                 }, 2000);
             },
@@ -179,7 +218,7 @@ if (process.env.NODE_ENV === 'development') {
 ### Can I test with real tokens in development?
 
 Yes, but use Rapido's staging environment:
-- **Staging API**: `https://rapido_ota_host/api/ota`
+- **Staging API**: `<rapido-host-url-staging>/api/ota`
 - **Staging tokens** are provided for testing
 - Contact the integration team for staging credentials
 
@@ -196,7 +235,7 @@ window.NativeJSBridge.requestUserToken();
 
 // API Key - ONLY use in backend
 const headers = {
-    'authorization': `${process.env.RAPIDO_PARTNER_API_KEY}`
+    'authorization': `${process.env.CLIENT_KEY}`
 };
 ```
 
@@ -209,16 +248,16 @@ Common production issues:
 1. **Environment variables not set**
    ```bash
    # Ensure these are set in production
-   RAPIDO_PARTNER_API_KEY=your-production-key
-   RAPIDO_CLIENT_ID=your-client-id
+   CLIENT_KEY=your-production-key
+   CLIENT_ID=your-client-id
    ```
 
 2. **Wrong API endpoints**
    ```javascript
    // Use production URLs in production
    const baseURL = process.env.NODE_ENV === 'production'
-       ? 'https://partner-api.rapido.bike/ota'
-       : 'https://staging-api.rapido.bike/partner';
+       ? '<rapido-host-url-prod>/api/ota'
+       : '<rapido-host-url-staging>/api/ota';
    ```
 
 3. **HTTPS certificate issues**
@@ -245,8 +284,8 @@ Check these common causes:
        if (window.NativeJSBridge?.storeSessionId) {
            window.NativeJSBridge.storeSessionId('');
        }
-       // Request new authentication
-       window.NativeJSBridge.requestUserToken();
+       // Request new authentication with profile scope
+       window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    }
    ```
 

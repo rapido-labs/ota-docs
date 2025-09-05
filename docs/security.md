@@ -90,7 +90,9 @@ Rapido's integration employs multiple layers of security to protect user data an
 
 ```javascript
 // ✅ Secure token handling implementation
-function onTokenReceived(token) {
+window.JSBridge = window.JSBridge || {};
+
+window.JSBridge.onTokenReceived = function(token) {
     // Validate token format without logging it
     if (!token || typeof token !== 'string' || token.length < 50) {
         console.error('Invalid token format received');
@@ -114,13 +116,29 @@ function onTokenReceived(token) {
             if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
                 window.NativeJSBridge.storeSessionId(result.sessionId);
             }
+            
+            // Notify native app of successful authentication
+            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                window.NativeJSBridge.updateLoginStatus(true, null);
+            }
+            
             window.location.href = '/dashboard';
         } else {
+            // Notify native app of authentication failure
+            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                window.NativeJSBridge.updateLoginStatus(false, result.error || 'Authentication failed');
+            }
             handleAuthError(result.error);
         }
     })
     .catch(error => {
         console.error('Authentication failed');
+        
+        // Notify native app of network/processing error
+        if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+            window.NativeJSBridge.updateLoginStatus(false, 'Network error during authentication');
+        }
+        
         handleAuthError('Authentication failed');
     });
 }
@@ -147,7 +165,7 @@ app.use('/api/auth', authLimiter);
 class SecureAPIConfig {
     constructor() {
         this.apiKey = process.env.RAPIDO_PARTNER_API_KEY;
-        this.clientId = process.env.RAPIDO_CLIENT_ID;
+        this.clientId = process.env.CLIENT_ID;
         
         if (!this.apiKey || !this.clientId) {
             throw new Error('Missing required environment variables');

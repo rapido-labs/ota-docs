@@ -116,9 +116,9 @@ requestAuthentication: function() {
     
     try {
         if (window.NativeJSBridge && typeof window.NativeJSBridge.requestUserToken === 'function') {
-            // Request token from Rapido
-            // Request user token - client ID handled automatically by native app
-            window.NativeJSBridge.requestUserToken();
+            // Request token from Rapido with profile scope
+            // Request user token with metadata for profile access
+            window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
         } else {
             throw new Error('Rapido NativeJSBridge interface not available');
         }
@@ -152,7 +152,7 @@ Your client ID is provided by Rapido's team. Store it securely:
 ```javascript
 // Configuration object
 const RAPIDO_CONFIG = {
-    CLIENT_ID: 'your-partner-client-id', // Provided by Rapido
+    CLIENT_ID: 'your-client-id', // Provided by Rapido
     API_BASE_URL: 'https://your-api.com',
     DEBUG_MODE: false // Set to false in production
 };
@@ -166,10 +166,10 @@ After requesting a token, Rapido shows a consent screen to the user. Upon approv
 
 ```javascript
 setupCallbacks: function() {
-    // CRITICAL: These functions must be globally accessible
-    window.onTokenReceived = this.handleTokenReceived.bind(this);
-    window.onUserSkippedLogin = this.handleUserSkippedLogin.bind(this);
-    window.onError = this.handleError.bind(this);
+    // CRITICAL: These functions must be accessible via JSBridge
+    window.JSBridge.onTokenReceived = this.handleTokenReceived.bind(this);
+    window.JSBridge.onUserSkippedLogin = this.handleUserSkippedLogin.bind(this);
+    window.JSBridge.onError = this.handleError.bind(this);
 },
 
 handleTokenReceived: function(token) {
@@ -277,9 +277,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rapido API configuration
 const RAPIDO_API = {
-    BASE_URL: 'https://rapido_ota_host/api',
-    PARTNER_ID: process.env.RAPIDO_PARTNER_ID, // Store securely
-    PARTNER_KEY: process.env.RAPIDO_PARTNER_API_KEY, // Store securely
+    BASE_URL: '<rapido-host-url-staging>/api',
+    CLIENT_ID: process.env.CLIENT_ID, // Store securely
+    CLIENT_KEY: process.env.CLIENT_KEY, // Store securely
     TIMEOUT: 10000 // 10 seconds
 };
 
@@ -306,8 +306,10 @@ app.post('/api/auth/rapido-login', async (req, res) => {
             },
             {
                 headers: {
-                    'authorization': `${RAPIDO_API.PARTNER_KEY}`,
-                    'x-client-id': `${PARTNER_ID}`,
+                    'authorization': `${RAPIDO_API.CLIENT_KEY}`,
+                    'x-client-id': `${RAPIDO_API.CLIENT_ID}`,
+                    'x-client-service': '<your_service_offering>',
+                    'x-client-appid': '<your_app_id>',
                     'Content-Type': 'application/json',
                     'User-Agent': 'YourApp-Partner/1.0'
                 },
@@ -479,7 +481,7 @@ Here's a complete, production-ready implementation:
     <script>
         // Configuration
         const RAPIDO_CONFIG = {
-            CLIENT_ID: 'your-partner-client-id',
+            CLIENT_ID: 'your-client-id',
             API_BASE_URL: 'https://your-api.com',
             DEBUG_MODE: false
         };

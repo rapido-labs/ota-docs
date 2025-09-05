@@ -19,10 +19,10 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 1. **Check if function is globally accessible**
    ```javascript
    // Test in browser console
-   console.log(typeof window.onTokenReceived); // Should be 'function'
+   console.log(typeof window.JSBridge.onTokenReceived); // Should be 'function'
    
    // If undefined, the function isn't globally accessible
-   if (typeof window.onTokenReceived === 'undefined') {
+   if (typeof window.JSBridge.onTokenReceived === 'undefined') {
        console.error('onTokenReceived is not globally accessible');
    }
    ```
@@ -30,12 +30,12 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 2. **Verify function timing**
    ```javascript
    // ❌ Wrong - function defined after token request
-   window.NativeJSBridge.requestUserToken();
-   window.onTokenReceived = function(token) { /* ... */ };
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    
    // ✅ Correct - function defined before token request
-   window.onTokenReceived = function(token) { /* ... */ };
-   window.NativeJSBridge.requestUserToken();
+   window.JSBridge.onTokenReceived = function(token) { /* ... */ };
+   window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
    ```
 
 3. **Check bridge availability**
@@ -45,6 +45,8 @@ This is the most common issue developers face. Here's how to diagnose and fix it
        
        if (window.NativeJSBridge) {
            console.log('requestUserToken available:', typeof window.NativeJSBridge.requestUserToken);
+           console.log('updateLoginStatus available:', typeof window.NativeJSBridge.updateLoginStatus);
+           console.log('clearUserToken available:', typeof window.NativeJSBridge.clearUserToken);
            console.log('storeSessionId available:', typeof window.NativeJSBridge.storeSessionId);
            console.log('fetchSessionId available:', typeof window.NativeJSBridge.fetchSessionId);
        } else {
@@ -67,7 +69,7 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 })();
 
 // ✅ Solution - make function globally accessible
-window.onTokenReceived = function(token) {
+window.JSBridge.onTokenReceived = function(token) {
     console.log('Token received');
     // Handle token
 };
@@ -77,15 +79,15 @@ window.onTokenReceived = function(token) {
 ```javascript
 // ❌ Problem - React/Vue might overwrite the function
 useEffect(() => {
-    window.onTokenReceived = handleToken;
+    window.JSBridge.onTokenReceived = handleToken;
 }, []); // Function might be overwritten
 
 // ✅ Solution - ensure function persists
 useEffect(() => {
     // Store reference to prevent overwriting
-    const originalCallback = window.onTokenReceived;
+    const originalCallback = window.JSBridge.onTokenReceived;
     
-    window.onTokenReceived = function(token) {
+    window.JSBridge.onTokenReceived = function(token) {
         handleToken(token);
         // Call original if it existed
         if (originalCallback && originalCallback !== handleToken) {
@@ -95,8 +97,8 @@ useEffect(() => {
     
     return () => {
         // Cleanup if needed
-        if (window.onTokenReceived === handleToken) {
-            delete window.onTokenReceived;
+        if (window.JSBridge.onTokenReceived === handleToken) {
+            delete window.JSBridge.onTokenReceived;
         }
     };
 }, []);
@@ -110,7 +112,7 @@ function requestTokenWithTimeout() {
     let tokenReceived = false;
     
     // Store original callback
-    const originalCallback = window.onTokenReceived;
+    const originalCallback = window.JSBridge.onTokenReceived;
     
     // Set up timeout (30 seconds)
     timeoutId = setTimeout(() => {
@@ -119,12 +121,12 @@ function requestTokenWithTimeout() {
             showConsentRequiredMessage();
             
             // Restore original callback
-            window.onTokenReceived = originalCallback;
+            window.JSBridge.onTokenReceived = originalCallback;
         }
     }, 30000);
     
     // Override callback temporarily
-    window.onTokenReceived = function(token) {
+    window.JSBridge.onTokenReceived = function(token) {
         tokenReceived = true;
         clearTimeout(timeoutId);
         
@@ -134,12 +136,12 @@ function requestTokenWithTimeout() {
         }
         
         // Restore original callback
-        window.onTokenReceived = originalCallback;
+        window.JSBridge.onTokenReceived = originalCallback;
     };
     
-    // Request token
+    // Request token with profile scope
     if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
-        window.NativeJSBridge.requestUserToken();
+        window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
     } else {
         console.error('Rapido bridge not available');
         clearTimeout(timeoutId);
@@ -157,10 +159,10 @@ function requestTokenWithTimeout() {
 ```javascript
 // Check API key configuration
 function validateAPIConfig() {
-    const apiKey = process.env.RAPIDO_PARTNER_API_KEY;
+    const apiKey = process.env.CLIENT_KEY;
     
     if (!apiKey) {
-        console.error('RAPIDO_PARTNER_API_KEY not set');
+        console.error('CLIENT_KEY not set');
         return false;
     }
     
@@ -184,19 +186,19 @@ function validateAPIConfig() {
 1. **Check environment variables**
    ```bash
    # Verify environment variables are set
-   echo $RAPIDO_PARTNER_API_KEY
-   echo $RAPIDO_CLIENT_ID
+   echo $CLIENT_KEY
+   echo $CLIENT_ID
    
    # For Node.js applications
-   node -e "console.log('API Key:', process.env.RAPIDO_PARTNER_API_KEY ? 'SET' : 'NOT SET')"
+   node -e "console.log('API Key:', process.env.CLIENT_KEY ? 'SET' : 'NOT SET')"
    ```
 
 2. **Verify API endpoint**
    ```javascript
    // Ensure you're using the correct environment
    const baseURL = process.env.NODE_ENV === 'production'
-       ? 'https://partner-api.rapido.bike/ota'      // Production
-       : 'https://rapido_ota_host/api/ota'; // Staging
+       ? '<rapido-host-url-prod>/api/ota'      // Production
+       : '<rapido-host-url-staging>/api/ota'; // Staging
    
    console.log('Using API endpoint:', baseURL);
    ```
@@ -467,8 +469,8 @@ systemctl show-environment | grep RAPIDO
    // Add to your application startup
    function validateEnvironment() {
        const required = [
-           'RAPIDO_PARTNER_API_KEY',
-           'RAPIDO_CLIENT_ID',
+           'CLIENT_KEY',
+           'CLIENT_ID',
            'SESSION_SECRET'
        ];
        
@@ -490,15 +492,15 @@ systemctl show-environment | grep RAPIDO
    // config/index.js
    const environments = {
        development: {
-           rapidoAPI: 'https://staging-api.rapido.bike/partner',
+           rapidoAPI: '<rapido-host-url-staging>/api/ota',
            logLevel: 'debug'
        },
        staging: {
-           rapidoAPI: 'https://staging-api.rapido.bike/partner',
+           rapidoAPI: '<rapido-host-url-staging>/api/ota',
            logLevel: 'info'
        },
        production: {
-           rapidoAPI: 'https://partner-api.rapido.bike/ota',
+           rapidoAPI: '<rapido-host-url-prod>/api/ota',
            logLevel: 'warn'
        }
    };
@@ -537,16 +539,16 @@ async function runIntegrationTest() {
     
     // Test 1: Environment variables
     console.log('1. Checking environment variables...');
-    const apiKey = process.env.RAPIDO_PARTNER_API_KEY;
-    const clientId = process.env.RAPIDO_CLIENT_ID;
+    const apiKey = process.env.CLIENT_KEY;
+    const clientId = process.env.CLIENT_ID;
     
     if (!apiKey) {
-        console.error('❌ RAPIDO_PARTNER_API_KEY not set');
+        console.error('❌ CLIENT_KEY not set');
         return;
     }
     
     if (!clientId) {
-        console.error('❌ RAPIDO_CLIENT_ID not set');
+        console.error('❌ CLIENT_ID not set');
         return;
     }
     
