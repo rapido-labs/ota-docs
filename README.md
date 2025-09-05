@@ -1,41 +1,63 @@
-# Website
+# Rapido Partner Integration Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+This repository contains the comprehensive documentation for integrating Progressive Web Applications (PWAs) with Rapido's ecosystem, enabling seamless Single Sign-On (SSO) for partner applications.
 
-## Installation
+## 📖 About This Documentation
+
+This documentation is designed for partner engineers, backend developers, and technical leads who want to integrate their PWA applications with Rapido's platform. It covers:
+
+- **Single Sign-On (SSO) Implementation** - Allow Rapido users to access your PWA without additional login steps
+- **Secure Token Management** - Handle user authentication tokens using Rapido's encrypted session management
+- **JavaScript Bridge Integration** - Implement secure communication between your PWA and Rapido app
+- **Backend API Integration** - Validate tokens and fetch user details through server-to-server APIs
+- **Session Persistence** - Maintain user sessions across app launches
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js (>= 18.0)
+- Yarn or npm
+- A PWA application hosted on HTTPS
+- Access to Rapido's partner portal
+
+### Installation
 
 ```bash
-yarn
+yarn install
 ```
 
-## Local Development
+### Local Development
 
 ```bash
 yarn start
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+This starts a local development server at `http://localhost:3000` with live reload for documentation changes.
 
-## Build
+### Build Documentation
 
 ```bash
 yarn build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+Generates static content into the `build` directory for production deployment.
 
-## Deployment
+## 📚 Documentation Structure
 
-Using SSH:
+- **[Introduction](docs/intro.md)** - Overview and getting started
+- **[Quick Start Guide](docs/quickstart.md)** - Step-by-step integration
+- **[Integration Overview](docs/overview.md)** - Complete architecture and flow
+- **[API Reference](docs/API%20Reference.md)** - Detailed API documentation
+- **[Security Guidelines](docs/security.md)** - Best practices and security considerations
+- **[FAQ](docs/faq.md)** - Common questions and solutions
+- **[Troubleshooting](docs/troubleshooting.md)** - Debug common issues
 
-```bash
-USE_SSH=true yarn deploy
-```
+## 📞 Support
 
-Not using SSH:
+- **Integration Support**: Contact the Rapido integration team through the partner portal
+- **Documentation Issues**: Create an issue in this repository
+- **Technical Questions**: Refer to our [FAQ](docs/faq.md) and [Troubleshooting](docs/troubleshooting.md) guides
 
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
+## 📄 License
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+This documentation is proprietary to Rapido and intended for authorized partners only.
