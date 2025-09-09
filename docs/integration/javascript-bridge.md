@@ -10,12 +10,13 @@ The Rapido JavaScript Bridge provides secure communication between your PWA and 
 
 ## Bridge Overview
 
-The JavaScript Bridge is exposed through the `window.NativeJSBridge` object when your PWA runs inside the Rapido app. It provides four core functionalities:
+The JavaScript Bridge is exposed through the `window.NativeJSBridge` object when your PWA runs inside the Rapido app. It provides five core functionalities:
 
 1. **Authentication Token** - Request user authentication tokens
 2. **Login Status** - Notify app about authentication results
 3. **Session Storage** - Securely store and retrieve session IDs
-4. **Event Handling** - Receive callbacks from Rapido
+4. **Event Logging** - Track custom events with structured data for analytics
+5. **Event Handling** - Receive callbacks from Rapido
 
 ## Available Methods
 
@@ -299,6 +300,86 @@ function clearStoredSession() {
     }
 }
 ```
+
+### logEvents(eventType, propertiesJson)
+
+Logs custom events with structured data for analytics and tracking purposes.
+
+#### Parameters
+- `eventType` (string, required): The type/name of the event to log (e.g., 'user_action', 'page_view', 'custom_event')
+- `propertiesJson` (string, optional): A JSON string containing event properties as key-value pairs
+
+#### Usage
+```javascript
+function trackUserAction(actionName) {
+    const properties = {
+        action_name: actionName,
+        timestamp: new Date().toISOString(),
+        page_url: window.location.href,
+        user_agent: navigator.userAgent
+         // add additional properties
+    };
+    
+    if (window.NativeJSBridge && window.NativeJSBridge.logEvents) {
+        window.NativeJSBridge.logEvents('<EventType>', JSON.stringify(properties));
+    }
+}
+
+function trackPageView() {
+    const properties = {
+        page_name: document.title,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString(),
+        // add additional properties
+    };
+    
+    window.NativeJSBridge.logEvents('<EventType>', JSON.stringify(properties));
+}
+
+```
+
+#### Behavior
+1. Accepts the event type as a string and properties as a JSON string
+2. Validates the parameters on the native side
+3. Parses the properties JSON into a HashMap
+4. Logs the event with structured data
+5. Calls your `onEventLogged` callback with success/failure status
+
+#### Error Handling
+```javascript
+function safeLogEvent(eventType, properties) {
+    try {
+        if (!window.NativeJSBridge) {
+            throw new Error('Running outside Rapido app');
+        }
+        
+        if (typeof window.NativeJSBridge.logEvents !== 'function') {
+            throw new Error('logEvents method not available');
+        }
+        
+        if (!eventType || typeof eventType !== 'string') {
+            throw new Error('eventType must be a non-empty string');
+        }
+        
+        const propertiesJson = JSON.stringify(properties || {});
+        window.NativeJSBridge.logEvents(eventType, propertiesJson);
+        
+    } catch (error) {
+        console.error('Failed to log event:', error);
+        // Handle gracefully - maybe store for later or use fallback analytics
+        storeEventForLater(eventType, properties);
+    }
+}
+```
+
+#### Best Practices
+- Use consistent naming conventions for event types (e.g., snake_case)
+- Keep property keys as strings
+- Always JSON.stringify() the properties object before passing to logEvents
+- Avoid deeply nested objects in properties for better performance
+- Include timestamp information when relevant
+- Limit the size of properties object to avoid large JSON strings
+- Handle JSON.stringify() errors if properties contain circular references
 
 ## Event Handlers
 
