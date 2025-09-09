@@ -174,13 +174,6 @@ function secureStoreSession(sessionId) {
     try {
         if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
             window.NativeJSBridge.storeSessionId(sessionId);
-            
-            // Verify storage by immediately fetching
-            const stored = window.NativeJSBridge.fetchSessionId();
-            if (stored !== sessionId) {
-                throw new Error('Session storage verification failed');
-            }
-            
             return true;
         } else {
             console.warn('Session storage not available - user will need to re-authenticate');
@@ -193,60 +186,109 @@ function secureStoreSession(sessionId) {
 }
 ```
 
-### fetchSessionId()
+### requestSessionId()
 
-Retrieves the stored session ID from Rapido's secure storage.
+Requests the stored session ID from Rapido's secure storage using a callback pattern for iOS compatibility.
 
-#### Returns
-- `string|null`: The stored session ID, or `null` if no session exists
+#### Parameters
+- None (uses callback pattern)
 
 #### Usage
 ```javascript
-function getStoredSession() {
-    if (window.NativeJSBridge && window.NativeJSBridge.fetchSessionId) {
-        try {
-            const sessionId = window.NativeJSBridge.fetchSessionId();
-            return sessionId && sessionId !== 'null' ? sessionId : null;
-        } catch (error) {
-            console.error('Failed to fetch session:', error);
-            return null;
-        }
+function requestStoredSession() {
+    if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
+        // IMPORTANT: Set up callback before calling requestSessionId
+        window.JSBridge.onSessionIdReceived = function(sessionId) {
+            if (sessionId && sessionId !== 'null') {
+                console.log('Session found:', sessionId);
+                // Process stored session
+            } else {
+                console.log('No session found');
+                // Handle no session case
+            }
+        };
+        
+        window.NativeJSBridge.requestSessionId();
+    } else {
+        console.error('Rapido NativeJSBridge not available');
     }
-    return null;
+}
+```
+
+#### Behavior
+1. Accesses Rapido's secure storage
+2. Retrieves encrypted session ID if it exists
+3. Calls your `onSessionIdReceived` function with the result
+4. Returns `null` if no session exists
+
+#### Error Handling
+```javascript
+function safeRequestSession() {
+    try {
+        if (!window.NativeJSBridge) {
+            throw new Error('Running outside Rapido app');
+        }
+        
+        if (typeof window.NativeJSBridge.requestSessionId !== 'function') {
+            throw new Error('requestSessionId method not available');
+        }
+        
+        // IMPORTANT: Set up callback before calling requestSessionId
+        window.JSBridge.onSessionIdReceived = function(sessionId) {
+            if (sessionId && sessionId !== 'null') {
+                console.log('Session found:', sessionId);
+                // Handle existing session (validate with backend)
+            } else {
+                console.log('No session found');
+                // Show login screen
+                showLoginScreen();
+            }
+        };
+        
+        window.NativeJSBridge.requestSessionId();
+        
+    } catch (error) {
+        console.error('Failed to request session:', error);
+        // Handle gracefully - maybe show login option
+        showLoginScreen();
+    }
 }
 ```
 
 #### Advanced Usage with Validation
 ```javascript
-async function validateAndGetSession() {
-    const sessionId = getStoredSession();
-    
-    if (!sessionId) {
-        console.log('No stored session found');
-        return null;
-    }
-    
-    // Validate session with backend
-    try {
-        const response = await fetch('/api/auth/validate-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId })
-        });
-        
-        const data = await response.json();
-        
-        if (data.valid) {
-            return sessionId;
-        } else {
-            console.log('Stored session is invalid');
-            // Clear invalid session
-            clearStoredSession();
-            return null;
+function validateAndGetSession() {
+    // Set up callback for session validation
+    window.JSBridge.onSessionIdReceived = async function(sessionId) {
+        if (!sessionId || sessionId === 'null') {
+            console.log('No stored session found');
+            // Show login screen or request new authentication
+            return;
         }
-    } catch (error) {
-        console.error('Session validation failed:', error);
-        return null;
+        
+        // Validate session with your backend API
+        // NOTE: See API Examples documentation for complete backend implementation
+        try {
+            // Call your session validation endpoint
+            const isValid = await validateSessionWithYourBackend(sessionId);
+            
+            if (isValid) {
+                // Proceed with authenticated flow (show dashboard, etc.)
+                console.log('Session is valid - proceeding to app');
+            } else {
+                console.log('Stored session is invalid');
+                // Clear invalid session and show login
+                clearStoredSession();
+            }
+        } catch (error) {
+            console.error('Session validation failed:', error);
+            // Handle validation error (show login or retry)
+        }
+    };
+    
+    // Trigger session request
+    if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
+        window.NativeJSBridge.requestSessionId();
     }
 }
 
@@ -262,15 +304,15 @@ function clearStoredSession() {
 
 ### onTokenReceived(token)
 
-**CRITICAL**: This function must be globally accessible and will be called by Rapido when a user token is available.
+**CRITICAL**: This function must be set on `window.JSBridge.onTokenReceived` and will be called by Rapido when a user token is available.
 
 #### Parameters
 - `token` (string): Encrypted authentication token from Rapido
 
 #### Implementation
 ```javascript
-// Global function - must be accessible from window scope
-function onTokenReceived(token) {
+// Set the callback function directly on JSBridge
+window.JSBridge.onTokenReceived = function(token) {
     console.log('Token received from Rapido');
     
     // Validate token parameter
@@ -280,9 +322,9 @@ function onTokenReceived(token) {
         return;
     }
     
-    // Process token
+    // Process token with your backend
     processReceivedToken(token);
-}
+};
 
 async function processReceivedToken(token) {
     try {
@@ -331,6 +373,75 @@ function onUserSkippedLogin() {
     hideLoadingState();
     showLoginForm();
 }
+```
+
+### onSessionIdReceived(sessionId)
+
+**CRITICAL**: This function must be set on `window.JSBridge.onSessionIdReceived` and will be called by Rapido when a session ID request is processed.
+
+#### Parameters
+- `sessionId` (string|null): The retrieved session ID, or `null` if no session exists
+
+#### Implementation
+```javascript
+// Set the callback function directly on JSBridge
+window.JSBridge.onSessionIdReceived = function(sessionId) {
+    console.log('Session ID received from Rapido');
+    
+    // Validate sessionId parameter
+    if (sessionId && sessionId !== 'null') {
+        console.log('Session found:', sessionId);
+        // Handle existing session - validate with backend
+        validateExistingSession(sessionId);
+    } else {
+        console.log('No session found');
+        // Show login screen
+        showLoginScreen();
+    }
+};
+```
+
+#### Advanced Implementation
+```javascript
+// Advanced callback with comprehensive error handling
+window.JSBridge.onSessionIdReceived = function(sessionId) {
+    try {
+        // Validate parameter
+        if (!sessionId || sessionId === 'null') {
+            console.log('No stored session - user needs to authenticate');
+            // Show login screen
+            return;
+        }
+        
+        // Show processing state
+        // showLoadingState('Validating session...');
+        
+        // Validate session with your backend
+        // NOTE: See API Examples documentation for complete backend implementation
+        validateSessionWithYourBackend(sessionId)
+            .then((isValid) => {
+                if (isValid) {
+                    // Session is valid - proceed to authenticated state
+                    console.log('Session valid - proceeding to app');
+                } else {
+                    // Session expired or invalid - clear and request new authentication
+                    clearStoredSession();
+                    // Show login screen
+                }
+            })
+            .catch((error) => {
+                console.error('Session validation failed:', error);
+                // Handle session validation error appropriately
+            })
+            .finally(() => {
+                // hideLoadingState();
+            });
+            
+    } catch (error) {
+        console.error('Session processing failed:', error);
+        // Handle session processing error
+    }
+};
 ```
 
 ### onError(error)
@@ -406,7 +517,7 @@ function checkBridgeCapabilities() {
             requestUserToken: typeof window.NativeJSBridge.requestUserToken === 'function',
             updateLoginStatus: typeof window.NativeJSBridge.updateLoginStatus === 'function',
             storeSessionId: typeof window.NativeJSBridge.storeSessionId === 'function',
-            fetchSessionId: typeof window.NativeJSBridge.fetchSessionId === 'function'
+            requestSessionId: typeof window.NativeJSBridge.requestSessionId === 'function'
         }
     };
 }
@@ -461,15 +572,18 @@ const RapidoBridgeDebug = {
             console.log('Methods available:', {
                 requestUserToken: typeof window.NativeJSBridge.requestUserToken,
                 storeSessionId: typeof window.NativeJSBridge.storeSessionId,
-                fetchSessionId: typeof window.NativeJSBridge.fetchSessionId
+                requestSessionId: typeof window.NativeJSBridge.requestSessionId
             });
             
             // Try to get stored session
             try {
-                const stored = window.NativeJSBridge.fetchSessionId();
-                console.log('Stored session:', stored);
+                // Set up callback for debug session check
+                window.JSBridge.onSessionIdReceived = function(sessionId) {
+                    console.log('Debug: Stored session:', sessionId);
+                };
+                window.NativeJSBridge.requestSessionId();
             } catch (e) {
-                console.log('Could not fetch stored session:', e.message);
+                console.log('Could not request stored session:', e.message);
             }
         }
         
@@ -503,10 +617,14 @@ const RapidoBridgeDebug = {
                     localStorage.setItem('mockRapidoSession', sessionId);
                     return 'SUCCESS';
                 },
-                fetchSessionId: () => {
+                requestSessionId: () => {
+                    console.log('Mock: requesting session');
                     const session = localStorage.getItem('mockRapidoSession');
-                    console.log('Mock: fetching session', session);
-                    return session;
+                    setTimeout(() => {
+                        if (window.JSBridge.onSessionIdReceived) {
+                            window.JSBridge.onSessionIdReceived(session);
+                        }
+                    }, 100);
                 }
             };
         }
@@ -527,7 +645,7 @@ When testing your JavaScript Bridge integration:
 - [ ] **Token Request**: Test `requestUserToken` with valid client ID
 - [ ] **Consent Flow**: Test both approval and denial scenarios
 - [ ] **Token Processing**: Verify `onTokenReceived` callback works
-- [ ] **Session Storage**: Test `storeSessionId` and `fetchSessionId`
+- [ ] **Session Storage**: Test `storeSessionId` and `requestSessionId`
 - [ ] **Error Handling**: Test with invalid tokens and network failures
 - [ ] **Multiple Sessions**: Test session replacement and updates
 - [ ] **Bridge Unavailable**: Test graceful degradation when bridge is not available
@@ -537,5 +655,6 @@ When testing your JavaScript Bridge integration:
 
 **Next Steps**:
 - Review [Integration Basics](./basics.md) for complete implementation flow
-- Check [Security Guidelines](../security.md) for production security requirements
-- See [Troubleshooting](../troubleshooting.md) for common integration issues
+- Check [API Examples](../api/examples.md) for complete session management implementation
+- See [Security Guidelines](../security.md) for production security requirements
+- Review [Troubleshooting](../troubleshooting.md) for common integration issues

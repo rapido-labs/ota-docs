@@ -75,7 +75,7 @@ x-client-appid: <your_app_id>
 | `requestUserToken(metadata)` | Request authentication token from Rapido with metadata |
 | `updateLoginStatus(isSuccess, errorMessage)` | Notify native app of login result |
 | `storeSessionId(sessionId)` | Store session ID in secure storage |
-| `fetchSessionId()` | Retrieve stored session ID |
+| `requestSessionId()` | Request stored session ID |
 | `clearUserToken()` | Clear token and session data |
 
 ### Callbacks Required by PWA
@@ -83,6 +83,7 @@ x-client-appid: <your_app_id>
 | Callback | Purpose |
 |----------|---------|
 | `window.JSBridge.onTokenReceived(token)` | Receive authentication token |
+| `window.JSBridge.onSessionIdReceived(sessionId)` | Receive requested session ID |
 | `window.JSBridge.onUserSkippedLogin()` | Handle user declining authentication |
 | `window.JSBridge.onTokenCleared()` | Handle successful logout |
 | `window.JSBridge.onError(error)` | Handle bridge errors |

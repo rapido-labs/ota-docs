@@ -16,14 +16,14 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 
 #### Diagnostic Steps
 
-1. **Check if function is globally accessible**
+1. **Check if function is attached to JSBridge**
    ```javascript
    // Test in browser console
    console.log(typeof window.JSBridge.onTokenReceived); // Should be 'function'
    
-   // If undefined, the function isn't globally accessible
+   // If undefined, the function isn't attached to JSBridge
    if (typeof window.JSBridge.onTokenReceived === 'undefined') {
-       console.error('onTokenReceived is not globally accessible');
+       console.error('onTokenReceived is not attached to JSBridge');
    }
    ```
 
@@ -48,7 +48,7 @@ This is the most common issue developers face. Here's how to diagnose and fix it
            console.log('updateLoginStatus available:', typeof window.NativeJSBridge.updateLoginStatus);
            console.log('clearUserToken available:', typeof window.NativeJSBridge.clearUserToken);
            console.log('storeSessionId available:', typeof window.NativeJSBridge.storeSessionId);
-           console.log('fetchSessionId available:', typeof window.NativeJSBridge.fetchSessionId);
+           console.log('requestSessionId available:', typeof window.NativeJSBridge.requestSessionId);
        } else {
            console.warn('Not running in Rapido app environment');
        }
@@ -59,16 +59,14 @@ This is the most common issue developers face. Here's how to diagnose and fix it
 
 #### Solutions
 
-**Problem**: Function inside module/closure
+**Problem**: Function not attached to JSBridge
 ```javascript
-// ❌ Problem - function not globally accessible
-(function() {
-    function onTokenReceived(token) {
-        console.log('Token received');
-    }
-})();
+// ❌ Problem - function exists but not attached to JSBridge
+function onTokenReceived(token) {
+    console.log('Token received');
+}
 
-// ✅ Solution - make function globally accessible
+// ✅ Solution - attach function to JSBridge
 window.JSBridge.onTokenReceived = function(token) {
     console.log('Token received');
     // Handle token

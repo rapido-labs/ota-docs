@@ -99,7 +99,7 @@ Server-side token processing:
 Persistent session management:
 1. PWA receives `sessionId` from backend
 2. Calls `storeSessionId` to save in Rapido's secure storage (App)
-3. Subsequent launches use `fetchSessionId` to retrieve session
+3. Subsequent launches use `requestSessionId` to retrieve session
 4. Enables seamless re-authentication without user interaction
 
 

@@ -79,7 +79,7 @@ function validateTokenRequest(token, clientId) {
     "code": 7000,
     "data": {
         "user": {
-            "name": "Satya",
+            "name": "John Doe",
             "mobile": "7259206810"
         }
     },
@@ -159,255 +159,76 @@ function validateTokenRequest(token, clientId) {
 }
 ```
 
-## Implementation Examples
+## Basic Usage Example
 
-### Node.js/Express Example
+### Making the API Request
 
 ```javascript
-const axios = require('axios');
-
-class RapidoTokenValidator {
-    constructor(apiKey, environment = 'production') {
-        this.apiKey = apiKey;
-        this.baseURL = this.getBaseURL(environment);
-    }
-    
-    getBaseURL(environment) {
-        const urls = {
-            production: '<rapido-host-url-prod>/api/ota',
-            staging: '<rapido-host-url-staging>/api/ota',
-            sandbox: '<rapido-host-url-sandbox>/api/ota'
-        };
-        return urls[environment] || urls.production;
-    }
-    
-    async validateToken(token, clientId) {
-        try {
-            // Validate inputs
-            this.validateInputs(token, clientId);
-            
-            // Make API request
-            const response = await axios.post(
-                `${this.baseURL}/fetch-user-details`,
-                {
-                    token: token
-                },
-                {
-                    headers: {
-                        'authorization': `${this.apiKey}`,
-                        'Content-Type': 'application/json',
-                        'User-Agent': 'YourApp/1.0.0',
-                        'x-client-id': clientId,
-                        'x-client-service': '<your_service_offering>',
-                        'x-client-appid': '<your_app_id>'
-                    },
-                    timeout: 10000 // 10 seconds
-                }
-            );
-            
-            return response.data;
-            
-        } catch (error) {
-            throw this.handleAPIError(error);
-        }
-    }
-    
-    validateInputs(token, clientId) {
-        if (!token || typeof token !== 'string') {
-            throw new Error('Token is required and must be a string');
-        }
-        
-        if (!clientId || typeof clientId !== 'string') {
-            throw new Error('Client ID is required and must be a string');
-        }
-    }
-    
-    generateRequestId() {
-        return 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-    
-    handleAPIError(error) {
-        if (error.response) {
-            // API returned an error response
-            const { status, data } = error.response;
-            const apiError = new Error(data.error?.message || 'API request failed');
-            apiError.status = status;
-            apiError.code = data.error?.code;
-            apiError.details = data.error?.details;
-            return apiError;
-        } else if (error.request) {
-            // Network error
-            return new Error('Network error: Unable to reach Rapido API');
-        } else {
-            // Other error
-            return error;
-        }
-    }
-}
-
-// Usage in Express route
-app.post('/api/auth/rapido-login', async (req, res) => {
+// Basic API call pattern
+async function validateRapidoToken(token) {
     try {
-        const { token } = req.body;
-        const clientId = process.env.CLIENT_ID;
+        const response = await fetch('<rapido-host-url>/api/ota/fetch-user-details', {
+            method: 'POST',
+            headers: {
+                'authorization': process.env.CLIENT_KEY,
+                'Content-Type': 'application/json',
+                'x-client-id': process.env.CLIENT_ID,
+                'x-client-service': '<your_service_offering>',
+                'x-client-appid': '<your_app_id>'
+            },
+            body: JSON.stringify({ token })
+        });
         
-        const validator = new RapidoTokenValidator(
-            process.env.CLIENT_KEY,
-            process.env.NODE_ENV === 'production' ? 'production' : 'staging'
-        );
+        const result = await response.json();
         
-        const result = await validator.validateToken(token, clientId);
-        
-        if (result.success && result.data.valid) {
-            const userData = result.data.user;
-            
-            // Create or update user in your database
-            const user = await createOrUpdateUser(userData);
-            
-            // Generate session
-            const sessionId = await createUserSession(user.id);
-            
-            res.json({
-                success: true,
-                sessionId: sessionId,
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email
-                }
-            });
+        if (result.success) {
+            // Token is valid - process user data
+            return {
+                valid: true,
+                user: result.data.user
+            };
         } else {
-            res.status(401).json({
-                success: false,
-                error: 'Token validation failed'
-            });
+            // Token validation failed
+            return {
+                valid: false,
+                error: result.error?.message
+            };
         }
         
     } catch (error) {
-        console.error('Authentication error:', error);
-        
-        const status = error.status || 500;
-        res.status(status).json({
+        // Network or parsing error
+        return {
+            valid: false,
+            error: 'Network error during validation'
+        };
+    }
+}
+
+// Usage in your authentication endpoint
+app.post('/api/auth/rapido-login', async (req, res) => {
+    const { token } = req.body;
+    
+    // Validate with Rapido API
+    const validation = await validateRapidoToken(token);
+    
+    if (validation.valid) {
+        // Create user session and respond
+        const sessionId = await createUserSession(validation.user);
+        res.json({
+            success: true,
+            sessionId: sessionId, // Will be stored in Rapido's secure storage
+            user: validation.user
+        });
+    } else {
+        res.status(401).json({
             success: false,
-            error: error.message || 'Authentication failed'
+            error: validation.error || 'Authentication failed'
         });
     }
 });
 ```
 
-### Python Example
-
-```python
-import requests
-import os
-import time
-import random
-import string
-from typing import Dict, Any
-
-class RapidoTokenValidator:
-    def __init__(self, api_key: str, environment: str = 'production'):
-        self.api_key = api_key
-        self.base_url = self._get_base_url(environment)
-        
-    def _get_base_url(self, environment: str) -> str:
-        urls = {
-            'production': '<rapido-host-url-prod>/api/ota',
-            'staging': '<rapido-host-url-staging>/api/ota',
-            'sandbox': '<rapido-host-url-sandbox>/api/ota'
-        }
-        return urls.get(environment, urls['production'])
-    
-    def validate_token(self, token: str, client_id: str) -> Dict[Any, Any]:
-        """Validate a user token with Rapido API"""
-        
-        # Validate inputs
-        self._validate_inputs(token, client_id)
-        
-        # Prepare request
-        url = f"{self.base_url}/fetch-user-details"
-        headers = {
-            'authorization': f'{self.api_key}',
-            'Content-Type': 'application/json',
-            'User-Agent': 'YourApp/1.0.0',
-            'x-client-id': client_id,
-            'x-client-service': '<your_service_offering>',
-            'x-client-appid': '<your_app_id>'
-        }
-        data = {
-            'token': token
-        }
-        
-        try:
-            response = requests.post(
-                url, 
-                json=data, 
-                headers=headers, 
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                self._handle_api_error(response)
-                
-        except requests.RequestException as e:
-            raise Exception(f"Network error: {str(e)}")
-    
-    def _validate_inputs(self, token: str, client_id: str):
-        if not token or not isinstance(token, str):
-            raise ValueError("Token is required and must be a string")
-        
-        if not client_id or not isinstance(client_id, str):
-            raise ValueError("Client ID is required and must be a string")
-    
-    def _generate_request_id(self) -> str:
-        timestamp = str(int(time.time()))
-        random_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-        return f"req_{timestamp}_{random_str}"
-    
-    def _handle_api_error(self, response):
-        try:
-            error_data = response.json()
-            error_message = error_data.get('error', {}).get('message', 'API request failed')
-        except:
-            error_message = f"HTTP {response.status_code}: {response.text}"
-        
-        raise Exception(error_message)
-
-# Usage example
-def authenticate_user(token: str) -> Dict[Any, Any]:
-    try:
-        validator = RapidoTokenValidator(
-            api_key=os.environ['CLIENT_KEY'],
-            environment='production' if os.environ.get('ENV') == 'production' else 'staging'
-        )
-        
-        client_id = os.environ['CLIENT_ID']
-        result = validator.validate_token(token, client_id)
-        
-        if result.get('success') and result.get('data', {}).get('valid'):
-            user_data = result['data']['user']
-            
-            # Process user authentication
-            # ... your user creation/update logic here
-            
-            return {
-                'success': True,
-                'user': user_data
-            }
-        else:
-            return {
-                'success': False,
-                'error': 'Token validation failed'
-            }
-            
-    except Exception as e:
-        return {
-            'success': False,
-            'error': str(e)
-        }
-```
+**For complete implementation examples in multiple languages, see [API Examples](./examples.md).**
 
 ## Best Practices
 
@@ -434,6 +255,52 @@ def authenticate_user(token: str) -> Dict[Any, Any]:
 2. **Set up alerts** - Alert on high error rates or API unavailability
 3. **Log request IDs** - Include request IDs in logs for easier debugging
 4. **Monitor performance** - Track API response times
+
+## Session Management Integration
+
+After successful token validation, you'll need to implement session management for seamless user experience:
+
+### Key Integration Points
+
+1. **Return Session ID**: Your authentication endpoint should return a `sessionId` that will be stored in Rapido's secure storage
+2. **Session Validation**: Implement a session validation endpoint for checking stored sessions
+3. **Session Cleanup**: Handle session expiration and cleanup appropriately
+
+### Basic Session Flow
+
+```javascript
+// After successful token validation in your backend
+app.post('/api/auth/rapido-login', async (req, res) => {
+    // ... token validation logic ...
+    
+    if (tokenIsValid) {
+        // Generate secure session ID
+        const sessionId = generateSecureSessionId();
+        
+        // Store in your database with expiration
+        await createUserSession(userId, sessionId);
+        
+        res.json({
+            success: true,
+            sessionId: sessionId, // Rapido will store this securely
+            user: userData
+        });
+    }
+});
+
+// Session validation endpoint
+app.post('/api/auth/validate-session', async (req, res) => {
+    const { sessionId } = req.body;
+    const isValid = await validateUserSession(sessionId);
+    
+    res.json({ 
+        valid: isValid,
+        // Include user data if valid
+    });
+});
+```
+
+**For complete session management implementation with frontend integration, see [API Examples](./examples.md) and [JavaScript Bridge](../integration/javascript-bridge.md) documentation.**
 
 ---
 
