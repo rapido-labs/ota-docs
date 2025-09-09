@@ -174,21 +174,6 @@ function secureStoreSession(sessionId) {
     try {
         if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
             window.NativeJSBridge.storeSessionId(sessionId);
-            
-            // Verify storage by immediately requesting
-            let stored = null;
-            window.JSBridge.onSessionIdReceived = function(sessionId) {
-                stored = sessionId;
-            };
-            window.NativeJSBridge.requestSessionId();
-            
-            // For demo purposes only - in production, handle async properly
-            setTimeout(() => {
-                if (stored !== sessionId) {
-                    throw new Error('Session storage verification failed');
-                }
-            }, 100);
-            
             return true;
         } else {
             console.warn('Session storage not available - user will need to re-authenticate');
@@ -254,31 +239,27 @@ function validateAndGetSession() {
     window.JSBridge.onSessionIdReceived = async function(sessionId) {
         if (!sessionId || sessionId === 'null') {
             console.log('No stored session found');
-            handleNoSession();
+            // Show login screen or request new authentication
             return;
         }
         
-        // Validate session with backend
+        // Validate session with your backend API
+        // NOTE: See API Examples documentation for complete backend implementation
         try {
-            const response = await fetch('/api/auth/validate-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId })
-            });
+            // Call your session validation endpoint
+            const isValid = await validateSessionWithYourBackend(sessionId);
             
-            const data = await response.json();
-            
-            if (data.valid) {
-                handleValidSession(sessionId);
+            if (isValid) {
+                // Proceed with authenticated flow (show dashboard, etc.)
+                console.log('Session is valid - proceeding to app');
             } else {
                 console.log('Stored session is invalid');
-                // Clear invalid session
+                // Clear invalid session and show login
                 clearStoredSession();
-                handleInvalidSession();
             }
         } catch (error) {
             console.error('Session validation failed:', error);
-            handleValidationError(error);
+            // Handle validation error (show login or retry)
         }
     };
     
@@ -286,26 +267,6 @@ function validateAndGetSession() {
     if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
         window.NativeJSBridge.requestSessionId();
     }
-}
-
-function handleValidSession(sessionId) {
-    console.log('Valid session confirmed:', sessionId);
-    // Proceed with authenticated flow
-}
-
-function handleNoSession() {
-    console.log('No session - showing login');
-    // Show login screen
-}
-
-function handleInvalidSession() {
-    console.log('Invalid session - requesting new login');
-    // Show login screen
-}
-
-function handleValidationError(error) {
-    console.log('Validation error - proceeding with caution');
-    // Maybe show login or retry
 }
 
 function clearStoredSession() {
@@ -428,54 +389,39 @@ window.JSBridge.onSessionIdReceived = function(sessionId) {
         // Validate parameter
         if (!sessionId || sessionId === 'null') {
             console.log('No stored session - user needs to authenticate');
-            handleNoSession();
+            // Show login screen
             return;
         }
         
         // Show processing state
-        showLoadingState('Validating session...');
+        // showLoadingState('Validating session...');
         
-        // Validate session with backend
-        validateSessionWithBackend(sessionId)
+        // Validate session with your backend
+        // NOTE: See API Examples documentation for complete backend implementation
+        validateSessionWithYourBackend(sessionId)
             .then((isValid) => {
                 if (isValid) {
                     // Session is valid - proceed to authenticated state
-                    handleValidSession(sessionId);
+                    console.log('Session valid - proceeding to app');
                 } else {
                     // Session expired or invalid - clear and request new authentication
                     clearStoredSession();
-                    handleInvalidSession();
+                    // Show login screen
                 }
             })
             .catch((error) => {
                 console.error('Session validation failed:', error);
-                handleSessionError(error.message);
+                // Handle session validation error appropriately
             })
             .finally(() => {
-                hideLoadingState();
+                // hideLoadingState();
             });
             
     } catch (error) {
         console.error('Session processing failed:', error);
-        handleSessionError(error.message);
-        hideLoadingState();
+        // Handle session processing error
     }
 };
-
-async function validateSessionWithBackend(sessionId) {
-    const response = await fetch('/api/auth/validate-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
-    });
-    
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data.valid;
-}
 ```
 
 ### onError(error)
@@ -689,6 +635,6 @@ When testing your JavaScript Bridge integration:
 
 **Next Steps**:
 - Review [Integration Basics](./basics.md) for complete implementation flow
-- Check [Security Guidelines](../security.md) for production security requirements
-- See [Troubleshooting](../troubleshooting.md) for common integration issues
-- See [Troubleshooting](../troubleshooting.md) for common integration issues
+- Check [API Examples](../api/examples.md) for complete session management implementation
+- See [Security Guidelines](../security.md) for production security requirements
+- Review [Troubleshooting](../troubleshooting.md) for common integration issues

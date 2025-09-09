@@ -63,14 +63,10 @@ Rapido's integration employs multiple layers of security to protect user data an
    ```javascript
    // ✅ Proper token validation flow
    async function validateUserToken(token) {
-       const response = await fetch('/api/auth/validate-rapido-token', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ token })
-       });
-       
-       const result = await response.json();
-       return result.valid;
+       // Send token to your backend for validation with Rapido API
+       // See API Examples documentation for complete backend implementation
+       const isValid = await callYourTokenValidationEndpoint(token);
+       return isValid;
    }
    ```
 
@@ -89,8 +85,10 @@ Rapido's integration employs multiple layers of security to protect user data an
            // Set up callback first
            window.JSBridge.onSessionIdReceived = function(sessionId) {
                if (sessionId && sessionId !== 'null') {
+                   // Validate session with your backend
                    validateStoredSession(sessionId);
                } else {
+                   // Show login screen
                    requestNewAuthentication();
                }
            };
@@ -118,79 +116,64 @@ window.JSBridge.onTokenReceived = function(token) {
         return;
     }
     
-    // Immediately send to backend - never store locally
-    fetch('/api/auth/rapido-login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ token }),
-        credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            // Store only session ID securely
-            if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
-                window.NativeJSBridge.storeSessionId(result.sessionId);
+    // Immediately send to backend for validation - never store locally
+    // See API Examples documentation for complete implementation
+    validateTokenWithBackend(token)
+        .then(result => {
+            if (result.success) {
+                // Store only session ID securely in Rapido's encrypted storage
+                if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
+                    window.NativeJSBridge.storeSessionId(result.sessionId);
+                }
+                
+                // Notify native app of successful authentication
+                if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                    window.NativeJSBridge.updateLoginStatus(true, null);
+                }
+                
+                // Redirect to authenticated area
+                redirectToApp();
+            } else {
+                // Notify native app of authentication failure
+                if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                    window.NativeJSBridge.updateLoginStatus(false, result.error || 'Authentication failed');
+                }
+                // Handle authentication error appropriately
+            }
+        })
+        .catch(error => {
+            console.error('Authentication failed');
+            
+            // Notify native app of network/processing error
+            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                window.NativeJSBridge.updateLoginStatus(false, 'Network error during authentication');
             }
             
-            // Notify native app of successful authentication
-            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
-                window.NativeJSBridge.updateLoginStatus(true, null);
-            }
-            
-            window.location.href = '/dashboard';
-        } else {
-            // Notify native app of authentication failure
-            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
-                window.NativeJSBridge.updateLoginStatus(false, result.error || 'Authentication failed');
-            }
-            handleAuthError(result.error);
-        }
-    })
-    .catch(error => {
-        console.error('Authentication failed');
-        
-        // Notify native app of network/processing error
-        if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
-            window.NativeJSBridge.updateLoginStatus(false, 'Network error during authentication');
-        }
-        
-        handleAuthError('Authentication failed');
-    });
+            // Handle authentication error appropriately
+        });
 }
 
 // ✅ Secure session management flow
 window.JSBridge.onSessionIdReceived = function(sessionId) {
     if (sessionId && sessionId !== 'null') {
         console.log('Stored session found');
-        // Validate session with backend immediately
-        fetch('/api/auth/validate-session', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ sessionId }),
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.valid) {
-                // Session is valid - proceed to app
-                redirectToApp();
-            } else {
-                // Session expired - clear and re-authenticate
-                clearStoredSession();
+        // Validate session with backend immediately - never trust client-side sessions
+        // See API Examples documentation for complete backend validation implementation
+        validateSessionWithBackend(sessionId)
+            .then(result => {
+                if (result.valid) {
+                    // Session is valid - proceed to app
+                    redirectToApp();
+                } else {
+                    // Session expired - clear and re-authenticate
+                    clearStoredSession();
+                    requestNewAuth();
+                }
+            })
+            .catch(error => {
+                console.error('Session validation failed');
                 requestNewAuth();
-            }
-        })
-        .catch(error => {
-            console.error('Session validation failed');
-            requestNewAuth();
-        });
+            });
     } else {
         console.log('No stored session - requesting authentication');
         requestNewAuth();
@@ -212,59 +195,40 @@ function requestNewAuth() {
 
 ### Backend Security
 
-```javascript
-const rateLimit = require('express-rate-limit');
+**Critical Backend Security Requirements:**
 
-// Rate limiting for authentication endpoints
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // Limit each IP to 50 requests
-    message: {
-        success: false,
-        error: 'Too many authentication attempts'
-    }
-});
+1. **Rate Limiting**: Implement rate limiting on authentication endpoints to prevent abuse
+   ```javascript
+   // ✅ Implement rate limiting for auth endpoints
+   // See API Examples documentation for complete rate limiting implementation
+   ```
 
-app.use('/api/auth', authLimiter);
+2. **Secure Environment Variables**: Store API keys and sensitive configuration securely
+   ```javascript
+   // ✅ Always use environment variables for sensitive data
+   const apiKey = process.env.RAPIDO_PARTNER_API_KEY;
+   const clientId = process.env.CLIENT_ID;
+   
+   // ✅ Validate required environment variables at startup
+   if (!apiKey || !clientId) {
+       throw new Error('Missing required environment variables');
+   }
+   ```
 
-// Secure API key handling
-class SecureAPIConfig {
-    constructor() {
-        this.apiKey = process.env.RAPIDO_PARTNER_API_KEY;
-        this.clientId = process.env.CLIENT_ID;
-        
-        if (!this.apiKey || !this.clientId) {
-            throw new Error('Missing required environment variables');
-        }
-    }
-    
-    getHeaders() {
-        return {
-            'authorization': `${this.apiKey}`,
-            'Content-Type': 'application/json'
-        };
-    }
-}
+3. **Secure Session Generation**: Use cryptographically secure random session IDs
+   ```javascript
+   // ✅ Generate secure session IDs
+   const crypto = require('crypto');
+   const sessionId = crypto.randomBytes(32).toString('hex');
+   ```
 
-// Secure session management
-function generateSessionId() {
-    return crypto.randomBytes(32).toString('hex');
-}
+4. **Session Expiration**: Always set expiration times for sessions
+   ```javascript
+   // ✅ Set reasonable session expiration (24-48 hours)
+   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+   ```
 
-async function createSession(userId) {
-    const sessionId = generateSessionId();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    
-    await Session.create({
-        sessionId,
-        userId,
-        expiresAt,
-        createdAt: new Date()
-    });
-    
-    return sessionId;
-}
-```
+**See [API Examples](../api/examples.md) for complete backend security implementation.**
 
 **Critical Security Reminder**: The security of your users' data is a shared responsibility. While Rapido provides secure infrastructure and APIs, your implementation must also follow security best practices.
 
