@@ -112,14 +112,12 @@ function checkAuthentication() {
 
 Common reasons and solutions:
 
-1. **Function not globally accessible**
+1. **Function not properly attached to JSBridge**
    ```javascript
-   // ❌ Wrong - inside a module or closure
-   (function() {
-       function onTokenReceived(token) { /* ... */ }
-   })();
+   // ❌ Wrong - function exists but not attached to JSBridge
+   function onTokenReceived(token) { /* ... */ }
    
-   // ✅ Correct - globally accessible
+   // ✅ Correct - properly attached to JSBridge
    window.JSBridge.onTokenReceived = function(token) { /* ... */ };
    ```
 

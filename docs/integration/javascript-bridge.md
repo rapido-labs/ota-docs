@@ -304,15 +304,15 @@ function clearStoredSession() {
 
 ### onTokenReceived(token)
 
-**CRITICAL**: This function must be globally accessible and will be called by Rapido when a user token is available.
+**CRITICAL**: This function must be set on `window.JSBridge.onTokenReceived` and will be called by Rapido when a user token is available.
 
 #### Parameters
 - `token` (string): Encrypted authentication token from Rapido
 
 #### Implementation
 ```javascript
-// Global function - must be accessible from window scope
-function onTokenReceived(token) {
+// Set the callback function directly on JSBridge
+window.JSBridge.onTokenReceived = function(token) {
     console.log('Token received from Rapido');
     
     // Validate token parameter
@@ -322,9 +322,9 @@ function onTokenReceived(token) {
         return;
     }
     
-    // Process token
+    // Process token with your backend
     processReceivedToken(token);
-}
+};
 
 async function processReceivedToken(token) {
     try {
@@ -377,36 +377,33 @@ function onUserSkippedLogin() {
 
 ### onSessionIdReceived(sessionId)
 
-**CRITICAL**: This function must be globally accessible and will be called by Rapido when a session ID request is processed.
+**CRITICAL**: This function must be set on `window.JSBridge.onSessionIdReceived` and will be called by Rapido when a session ID request is processed.
 
 #### Parameters
 - `sessionId` (string|null): The retrieved session ID, or `null` if no session exists
 
 #### Implementation
 ```javascript
-// Global function - must be accessible from window scope
-function onSessionIdReceived(sessionId) {
+// Set the callback function directly on JSBridge
+window.JSBridge.onSessionIdReceived = function(sessionId) {
     console.log('Session ID received from Rapido');
     
     // Validate sessionId parameter
     if (sessionId && sessionId !== 'null') {
         console.log('Session found:', sessionId);
-        // Handle existing session
+        // Handle existing session - validate with backend
         validateExistingSession(sessionId);
     } else {
         console.log('No session found');
         // Show login screen
         showLoginScreen();
     }
-}
-
-// Set the callback
-window.JSBridge.onSessionIdReceived = onSessionIdReceived;
+};
 ```
 
 #### Advanced Implementation
 ```javascript
-// Global callback with comprehensive handling
+// Advanced callback with comprehensive error handling
 window.JSBridge.onSessionIdReceived = function(sessionId) {
     try {
         // Validate parameter
