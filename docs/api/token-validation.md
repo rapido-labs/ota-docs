@@ -300,17 +300,6 @@ app.post('/api/auth/validate-session', async (req, res) => {
 });
 ```
 
-### Session Management Best Practices
-
-1. **Session Expiration**: Set reasonable session lifetimes (24-48 
-hours)
-2. **Validation Strategy**: Always validate sessions server-side 
-before granting access
-3. **Security**: Never store sessions in browser storage - use 
-Rapido's secure storage only
-4. **Error Handling**: Gracefully handle session expiration by 
-requesting re-authentication
-
 **For complete session management implementation with frontend integration, see [API Examples](./examples.md) and [JavaScript Bridge](../integration/javascript-bridge.md) documentation.**
 
 ---

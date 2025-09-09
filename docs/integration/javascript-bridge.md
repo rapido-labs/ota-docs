@@ -197,6 +197,17 @@ Requests the stored session ID from Rapido's secure storage using a callback pat
 ```javascript
 function requestStoredSession() {
     if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
+        // IMPORTANT: Set up callback before calling requestSessionId
+        window.JSBridge.onSessionIdReceived = function(sessionId) {
+            if (sessionId && sessionId !== 'null') {
+                console.log('Session found:', sessionId);
+                // Process stored session
+            } else {
+                console.log('No session found');
+                // Handle no session case
+            }
+        };
+        
         window.NativeJSBridge.requestSessionId();
     } else {
         console.error('Rapido NativeJSBridge not available');
@@ -221,6 +232,18 @@ function safeRequestSession() {
         if (typeof window.NativeJSBridge.requestSessionId !== 'function') {
             throw new Error('requestSessionId method not available');
         }
+        
+        // IMPORTANT: Set up callback before calling requestSessionId
+        window.JSBridge.onSessionIdReceived = function(sessionId) {
+            if (sessionId && sessionId !== 'null') {
+                console.log('Session found:', sessionId);
+                // Handle existing session (validate with backend)
+            } else {
+                console.log('No session found');
+                // Show login screen
+                showLoginScreen();
+            }
+        };
         
         window.NativeJSBridge.requestSessionId();
         
