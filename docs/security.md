@@ -228,7 +228,7 @@ function requestNewAuth() {
    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
    ```
 
-**See [API Examples](../api/examples.md) for complete backend security implementation.**
+**See [API Examples](api/examples.md) for complete backend security implementation.**
 
 **Critical Security Reminder**: The security of your users' data is a shared responsibility. While Rapido provides secure infrastructure and APIs, your implementation must also follow security best practices.
 
