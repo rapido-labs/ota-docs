@@ -79,7 +79,7 @@ function validateTokenRequest(token, clientId) {
     "code": 7000,
     "data": {
         "user": {
-            "name": "Satya",
+            "name": "John Doe",
             "mobile": "7259206810"
         }
     },
@@ -267,9 +267,10 @@ app.post('/api/auth/rapido-login', async (req, res) => {
             // Generate session
             const sessionId = await createUserSession(user.id);
             
+            // IMPORTANT: Return sessionId for storage in Rapido's secure storage
             res.json({
                 success: true,
-                sessionId: sessionId,
+                sessionId: sessionId, // This will be stored via storeSessionId()
                 user: {
                     id: user.id,
                     name: user.name,
@@ -434,6 +435,155 @@ def authenticate_user(token: str) -> Dict[Any, Any]:
 2. **Set up alerts** - Alert on high error rates or API unavailability
 3. **Log request IDs** - Include request IDs in logs for easier debugging
 4. **Monitor performance** - Track API response times
+
+## Session Management Integration
+
+After successful token validation, implement session management to provide seamless user experience across app launches:
+
+### Frontend Integration
+
+```javascript
+// Complete session management flow
+window.JSBridge.onTokenReceived = function(token) {
+    // Validate token with your backend
+    fetch('/api/auth/rapido-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            // Store session ID in Rapido's secure storage
+            if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
+                const storeResult = window.NativeJSBridge.storeSessionId(result.sessionId);
+                
+                if (storeResult === 'SUCCESS') {
+                    console.log('Session stored successfully');
+                }
+            }
+            
+            // Notify Rapido app of successful login
+            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                window.NativeJSBridge.updateLoginStatus(true, null);
+            }
+            
+            // Redirect to main app
+            window.location.href = '/dashboard';
+        } else {
+            handleAuthenticationError(result.error);
+        }
+    })
+    .catch(error => {
+        console.error('Authentication failed:', error);
+        handleAuthenticationError('Network error');
+    });
+};
+
+// Check for existing session on app startup
+window.JSBridge.onSessionIdReceived = function(sessionId) {
+    if (sessionId && sessionId !== 'null') {
+        // Validate stored session with backend
+        fetch('/api/auth/validate-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.valid) {
+                // Session is valid - direct access
+                window.location.href = '/dashboard';
+            } else {
+                // Session expired - clear and request new authentication
+                clearSessionAndRequestAuth();
+            }
+        })
+        .catch(error => {
+            console.error('Session validation failed:', error);
+            clearSessionAndRequestAuth();
+        });
+    } else {
+        // No stored session - request authentication
+        requestAuthentication();
+    }
+};
+
+function clearSessionAndRequestAuth() {
+    if (window.NativeJSBridge && window.NativeJSBridge.clearUserToken) {
+        window.NativeJSBridge.clearUserToken();
+    }
+    requestAuthentication();
+}
+
+function requestAuthentication() {
+    if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
+        window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
+    }
+}
+
+// Initialize session check on app load
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
+        window.NativeJSBridge.requestSessionId();
+    } else {
+        requestAuthentication();
+    }
+});
+```
+
+### Backend Session Validation Endpoint
+
+```javascript
+// Session validation endpoint
+app.post('/api/auth/validate-session', async (req, res) => {
+    try {
+        const { sessionId } = req.body;
+        
+        if (!sessionId) {
+            return res.json({ valid: false });
+        }
+        
+        // Validate session in your database
+        const session = await Session.findOne({
+            sessionId,
+            expiresAt: { $gt: new Date() }
+        }).populate('user');
+        
+        if (session) {
+            // Update last accessed time
+            session.lastAccessedAt = new Date();
+            await session.save();
+            
+            res.json({
+                valid: true,
+                userId: session.userId,
+                user: {
+                    id: session.user._id,
+                    name: session.user.name,
+                    email: session.user.email
+                }
+            });
+        } else {
+            // Clean up expired session
+            await Session.deleteOne({ sessionId });
+            res.json({ valid: false });
+        }
+        
+    } catch (error) {
+        console.error('Session validation error:', error);
+        res.json({ valid: false });
+    }
+});
+
+```
+
+### Session Management Best Practices
+
+1. **Session Expiration**: Set reasonable session lifetimes (24-48 hours)
+2. **Validation Strategy**: Always validate sessions server-side before granting access
+3. **Security**: Never store sessions in browser storage - use Rapido's secure storage only
+4. **Error Handling**: Gracefully handle session expiration by requesting re-authentication
 
 ---
 

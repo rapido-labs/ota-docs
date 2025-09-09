@@ -132,14 +132,18 @@ Add these functions to your PWA's main HTML file or JavaScript bundle:
                 validateSession(sessionId);
             } else {
                 // No session ID - check if we have one stored
-                if (window.NativeJSBridge && window.NativeJSBridge.fetchSessionId) {
-                    const storedSessionId = window.NativeJSBridge.fetchSessionId();
-                    if (storedSessionId && storedSessionId !== 'null') {
-                        validateSession(storedSessionId);
-                    } else {
-                        // No stored session - request new token
-                        requestNewToken();
-                    }
+                if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
+                    // Set up callback for stored session check
+                    window.JSBridge.onSessionIdReceived = function(storedSessionId) {
+                        if (storedSessionId && storedSessionId !== 'null') {
+                            validateSession(storedSessionId);
+                        } else {
+                            // No stored session - request new token
+                            requestNewToken();
+                        }
+                    };
+                    
+                    window.NativeJSBridge.requestSessionId();
                 } else {
                     requestNewToken();
                 }
@@ -310,7 +314,7 @@ if (sessionId) {
    - Verify user is logged in without showing consent screen
 
 3. **Session Storage Test**:
-   - Verify stored session ID is retrieved using `fetchSessionId`
+   - Verify stored session ID is retrieved using `requestSessionId`
    - Verify session validation works correctly
 
 4. **Bridge Readiness Test**:

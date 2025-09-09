@@ -79,7 +79,26 @@ Rapido's integration employs multiple layers of security to protect user data an
    // ✅ Correct session storage
    function storeSession(sessionId) {
        if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
-           window.NativeJSBridge.storeSessionId(sessionId);
+           return window.NativeJSBridge.storeSessionId(sessionId);
+       }
+   }
+   
+   // ✅ Correct session retrieval (iOS-compatible callback pattern)
+   function checkStoredSession() {
+       if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
+           // Set up callback first
+           window.JSBridge.onSessionIdReceived = function(sessionId) {
+               if (sessionId && sessionId !== 'null') {
+                   validateStoredSession(sessionId);
+               } else {
+                   requestNewAuthentication();
+               }
+           };
+           
+           // Request stored session
+           window.NativeJSBridge.requestSessionId();
+       } else {
+           requestNewAuthentication();
        }
    }
    ```
@@ -141,6 +160,53 @@ window.JSBridge.onTokenReceived = function(token) {
         
         handleAuthError('Authentication failed');
     });
+}
+
+// ✅ Secure session management flow
+window.JSBridge.onSessionIdReceived = function(sessionId) {
+    if (sessionId && sessionId !== 'null') {
+        console.log('Stored session found');
+        // Validate session with backend immediately
+        fetch('/api/auth/validate-session', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ sessionId }),
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.valid) {
+                // Session is valid - proceed to app
+                redirectToApp();
+            } else {
+                // Session expired - clear and re-authenticate
+                clearStoredSession();
+                requestNewAuth();
+            }
+        })
+        .catch(error => {
+            console.error('Session validation failed');
+            requestNewAuth();
+        });
+    } else {
+        console.log('No stored session - requesting authentication');
+        requestNewAuth();
+    }
+};
+
+function clearStoredSession() {
+    if (window.NativeJSBridge && window.NativeJSBridge.clearUserToken) {
+        window.NativeJSBridge.clearUserToken();
+    }
+}
+
+function requestNewAuth() {
+    if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
+        window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
+    }
 }
 ```
 

@@ -48,7 +48,7 @@ This is the most common issue developers face. Here's how to diagnose and fix it
            console.log('updateLoginStatus available:', typeof window.NativeJSBridge.updateLoginStatus);
            console.log('clearUserToken available:', typeof window.NativeJSBridge.clearUserToken);
            console.log('storeSessionId available:', typeof window.NativeJSBridge.storeSessionId);
-           console.log('fetchSessionId available:', typeof window.NativeJSBridge.fetchSessionId);
+           console.log('requestSessionId available:', typeof window.NativeJSBridge.requestSessionId);
        } else {
            console.warn('Not running in Rapido app environment');
        }

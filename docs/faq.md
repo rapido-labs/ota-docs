@@ -75,7 +75,7 @@ function initiateAuthWithTimeout() {
 
 This is the normal flow for first-time users or when sessions have expired. Your PWA should:
 
-1. Check for a stored session using `fetchSessionId()`
+1. Check for a stored session using `requestSessionId()`
 2. If no stored session exists, call `requestUserToken()` to initiate authentication
 
 ```javascript
@@ -88,11 +88,18 @@ function checkAuthentication() {
         validateSession(sessionId);
     } else {
         // Check for stored session
-        const storedSession = window.NativeJSBridge?.fetchSessionId();
-        if (storedSession && storedSession !== 'null') {
-            validateSession(storedSession);
+        if (window.NativeJSBridge?.requestSessionId) {
+            // Set up callback for stored session check
+            window.JSBridge.onSessionIdReceived = function(storedSession) {
+                if (storedSession && storedSession !== 'null') {
+                    validateSession(storedSession);
+                } else {
+                    // No session - request authentication
+                    requestAuthentication();
+                }
+            };
+            window.NativeJSBridge.requestSessionId();
         } else {
-            // No session - request authentication
             requestAuthentication();
         }
     }
@@ -199,10 +206,14 @@ function createMockBridge() {
                 console.log('Mock: Storing session', sessionId);
                 localStorage.setItem('mockRapidoSession', sessionId);
             },
-            fetchSessionId: function() {
+            requestSessionId: function() {
                 const session = localStorage.getItem('mockRapidoSession');
-                console.log('Mock: Fetching session', session);
-                return session;
+                console.log('Mock: Requesting session', session);
+                setTimeout(() => {
+                    if (window.JSBridge.onSessionIdReceived) {
+                        window.JSBridge.onSessionIdReceived(session);
+                    }
+                }, 100);
             }
         };
         console.log('Mock Rapido bridge created for development');

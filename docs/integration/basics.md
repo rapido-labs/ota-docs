@@ -69,20 +69,28 @@ https://your-pwa.com/app?sessionId=abc123xyz789
         
         checkStoredSession: function() {
             try {
-                if (window.NativeJSBridge && typeof window.NativeJSBridge.fetchSessionId === 'function') {
-                    const storedSessionId = window.NativeJSBridge.fetchSessionId();
+                if (window.NativeJSBridge && typeof window.NativeJSBridge.requestSessionId === 'function') {
+                    // Set up callback for session check result
+                    window.JSBridge.onSessionIdReceived = (storedSessionId) => {
+                        if (storedSessionId && storedSessionId !== 'null') {
+                            console.log('Found stored session:', storedSessionId);
+                            this.validateExistingSession(storedSessionId);
+                        } else {
+                            console.log('No stored session available');
+                            // No session found - initiate authentication
+                            this.requestAuthentication();
+                        }
+                    };
                     
-                    if (storedSessionId && storedSessionId !== 'null') {
-                        console.log('Found stored session:', storedSessionId);
-                        this.validateExistingSession(storedSessionId);
-                        return;
-                    }
+                    // Trigger session request (result comes via callback)
+                    window.NativeJSBridge.requestSessionId();
+                    return;
                 }
             } catch (error) {
-                console.log('No stored session available:', error);
+                console.log('Error checking stored session:', error);
             }
             
-            // No session found - initiate authentication
+            // Fallback - initiate authentication
             this.requestAuthentication();
         }
     };

@@ -26,7 +26,7 @@ By following this integration guide, you'll be able to:
 
 ✅ **User Consent Management** - Respect user privacy with Rapido's built-in consent mechanism
 
-✅ **Session Persistence** - Maintain user sessions across app launches using secure session ID storage
+✅ **Session Persistence** - Maintain user sessions across app launches using secure session ID storage with `requestSessionId` callback pattern
 
 ✅ **Backend Integration** - Validate user tokens and fetch user details through Rapido's server APIs
 
@@ -38,6 +38,27 @@ Rapido's SSO capability enables a frictionless user experience by:
 - **Secure token exchange** - All authentication tokens are encrypted and have limited validity
 - **User consent first** - Users explicitly approve data sharing with partner applications
 - **Seamless integration** - Minimal code changes required in your existing PWA
+
+### Session Persistence
+
+Rapido's session persistence system ensures users don't need to re-authenticate on every app launch:
+
+#### Initial Login Flow:
+1. User authenticates via `requestUserToken` → receives authentication token
+2. Your backend validates token → creates session ID
+3. PWA stores session ID using `storeSessionId` → saved in encrypted storage
+4. User gains access to your application
+
+#### Subsequent App Launches:
+1. PWA calls `requestSessionId` on startup → check for stored session
+2. Rapido returns stored session ID via `onSessionIdReceived` callback
+3. Your backend validates session ID → confirms it's still valid
+4. User gains immediate access → **no login required**
+
+#### Automatic Session Management:
+- **Expiration Handling**: Invalid/expired sessions trigger automatic re-authentication
+- **Secure Storage**: Session IDs stored in Rapido's encrypted keystore, never browser storage
+- **Cross-Platform**: Works identically on Android and iOS using callback patterns
 
 ## Integration Benefits
 

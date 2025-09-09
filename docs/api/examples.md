@@ -959,6 +959,265 @@ app.post('/api/auth/rapido-login', async (req, res) => {
 
 ## Testing Examples
 
+## Session Management Integration Examples
+
+### Complete Frontend + Backend Session Flow
+
+```javascript
+// Frontend session management with Rapido JSBridge
+class RapidoSessionManager {
+    constructor() {
+        this.setupCallbacks();
+    }
+    
+    setupCallbacks() {
+        // Set up session ID callback
+        window.JSBridge.onSessionIdReceived = (sessionId) => {
+            if (sessionId && sessionId !== 'null') {
+                console.log('Stored session found');
+                this.validateSession(sessionId);
+            } else {
+                console.log('No stored session - requesting authentication');
+                this.requestAuthentication();
+            }
+        };
+        
+        // Set up token callback
+        window.JSBridge.onTokenReceived = (token) => {
+            this.processAuthToken(token);
+        };
+    }
+    
+    // Check for existing session on app load
+    checkExistingSession() {
+        if (window.NativeJSBridge && window.NativeJSBridge.requestSessionId) {
+            window.NativeJSBridge.requestSessionId();
+        } else {
+            this.requestAuthentication();
+        }
+    }
+    
+    async validateSession(sessionId) {
+        try {
+            const response = await fetch('/api/auth/validate-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId })
+            });
+            
+            const result = await response.json();
+            
+            if (result.valid) {
+                this.redirectToDashboard();
+            } else {
+                // Session expired - clear and request new auth
+                this.clearSession();
+                this.requestAuthentication();
+            }
+        } catch (error) {
+            console.error('Session validation failed:', error);
+            this.requestAuthentication();
+        }
+    }
+    
+    requestAuthentication() {
+        if (window.NativeJSBridge && window.NativeJSBridge.requestUserToken) {
+            window.NativeJSBridge.requestUserToken({ scope: ["profile"] });
+        }
+    }
+    
+    async processAuthToken(token) {
+        try {
+            const response = await fetch('/api/auth/rapido-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Store session ID securely
+                this.storeSession(result.sessionId);
+                
+                // Notify native app
+                if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                    window.NativeJSBridge.updateLoginStatus(true, null);
+                }
+                
+                this.redirectToDashboard();
+            } else {
+                throw new Error(result.error || 'Authentication failed');
+            }
+        } catch (error) {
+            console.error('Authentication failed:', error);
+            
+            // Notify native app of failure
+            if (window.NativeJSBridge && window.NativeJSBridge.updateLoginStatus) {
+                window.NativeJSBridge.updateLoginStatus(false, error.message);
+            }
+        }
+    }
+    
+    storeSession(sessionId) {
+        if (window.NativeJSBridge && window.NativeJSBridge.storeSessionId) {
+            const result = window.NativeJSBridge.storeSessionId(sessionId);
+            if (result === 'SUCCESS') {
+                console.log('Session stored successfully');
+            }
+        }
+    }
+    
+    clearSession() {
+        if (window.NativeJSBridge && window.NativeJSBridge.clearUserToken) {
+            window.NativeJSBridge.clearUserToken();
+        }
+    }
+    
+    redirectToDashboard() {
+        window.location.href = '/dashboard';
+    }
+}
+
+// Initialize session manager
+const sessionManager = new RapidoSessionManager();
+
+// Check for existing session on page load
+document.addEventListener('DOMContentLoaded', () => {
+    sessionManager.checkExistingSession();
+});
+```
+
+### Backend Session Validation with Cleanup
+
+```javascript
+// Enhanced session service with automatic cleanup
+class SessionService {
+    static generateSessionId() {
+        return crypto.randomBytes(32).toString('hex');
+    }
+    
+    static async createSession(userId, metadata = {}) {
+        const sessionId = this.generateSessionId();
+        const expiresAt = new Date(Date.now() + config.session.expiry);
+        
+        // Clean up any existing sessions for this user
+        await Session.deleteMany({ 
+            userId,
+            expiresAt: { $lt: new Date() }
+        });
+        
+        const session = new Session({
+            sessionId,
+            userId,
+            expiresAt,
+            metadata,
+            lastAccessedAt: new Date(),
+            userAgent: metadata.userAgent || 'Unknown',
+            ipAddress: metadata.ipAddress || 'Unknown'
+        });
+        
+        await session.save();
+        
+        // Schedule cleanup job
+        this.scheduleSessionCleanup(sessionId, expiresAt);
+        
+        return {
+            sessionId,
+            expiresAt
+        };
+    }
+    
+    static async validateSession(sessionId) {
+        const session = await Session.findOne({ 
+            sessionId,
+            expiresAt: { $gt: new Date() }
+        }).populate('user');
+        
+        if (session) {
+            // Update last accessed time
+            session.lastAccessedAt = new Date();
+            await session.save();
+            
+            return {
+                valid: true,
+                userId: session.userId,
+                user: session.user,
+                metadata: session.metadata
+            };
+        } else {
+            // Clean up expired session
+            await Session.deleteOne({ sessionId });
+            return { valid: false };
+        }
+    }
+    
+    static async deleteSession(sessionId) {
+        await Session.deleteOne({ sessionId });
+    }
+    
+    static async cleanupExpiredSessions() {
+        const result = await Session.deleteMany({
+            expiresAt: { $lt: new Date() }
+        });
+        
+        console.log(`Cleaned up ${result.deletedCount} expired sessions`);
+        return result.deletedCount;
+    }
+    
+    static scheduleSessionCleanup(sessionId, expiresAt) {
+        const timeUntilExpiry = expiresAt.getTime() - Date.now();
+        
+        setTimeout(async () => {
+            await this.deleteSession(sessionId);
+            console.log(`Auto-cleaned expired session: ${sessionId}`);
+        }, timeUntilExpiry);
+    }
+}
+
+// Enhanced session validation route
+app.post('/api/auth/validate-session', async (req, res) => {
+    try {
+        const { sessionId } = req.body;
+        
+        if (!sessionId) {
+            return res.json({ valid: false });
+        }
+        
+        const validation = await SessionService.validateSession(sessionId);
+        
+        if (validation.valid) {
+            res.json({
+                valid: true,
+                userId: validation.userId,
+                user: {
+                    id: validation.user._id,
+                    name: validation.user.name,
+                    email: validation.user.email
+                }
+            });
+        } else {
+            res.json({ valid: false });
+        }
+        
+    } catch (error) {
+        console.error('Session validation error:', error);
+        res.json({ valid: false });
+    }
+});
+
+// Session cleanup cron job (run every hour)
+const cron = require('node-cron');
+
+cron.schedule('0 * * * *', async () => {
+    try {
+        await SessionService.cleanupExpiredSessions();
+    } catch (error) {
+        console.error('Session cleanup error:', error);
+    }
+});
+```
+
 ### Unit Tests (Jest)
 
 ```javascript
