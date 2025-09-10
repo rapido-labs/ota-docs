@@ -957,6 +957,476 @@ app.post('/api/auth/rapido-login', async (req, res) => {
 });
 ```
 
+## Events API Examples
+
+### PWA Events Examples
+
+#### PWA to Native Event Tracking
+
+```javascript
+// Track user action with flat properties only
+function trackUserAction(actionName, additionalData = {}) {
+    const properties = {
+        action_name: actionName,
+        timestamp: new Date().toISOString(),
+        page_url: window.location.href,
+        user_agent: navigator.userAgent,
+        session_id: getCurrentSessionId(),
+        ...additionalData
+    };
+    
+    // Properties must be flat JSON - nested objects are not allowed
+    if (window.NativeJSBridge && window.NativeJSBridge.logEvents) {
+        window.NativeJSBridge.logEvents('user_action', JSON.stringify(properties));
+    }
+}
+
+// Track page view
+function trackPageView() {
+    const properties = {
+        page_name: document.title,
+        page_url: window.location.href,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString(),
+        viewport_width: window.innerWidth,
+        viewport_height: window.innerHeight,
+        user_agent: navigator.userAgent
+    };
+    
+    window.NativeJSBridge.logEvents('page_view', JSON.stringify(properties));
+}
+
+// Track business event
+function trackBusinessEvent(eventType, businessData) {
+    const properties = {
+        event_type: eventType,
+        timestamp: new Date().toISOString(),
+        session_id: getCurrentSessionId(),
+        ...businessData  // All properties must be primitives (string, number, boolean)
+    };
+    
+    window.NativeJSBridge.logEvents('business_event', JSON.stringify(properties));
+}
+
+// Example usage with flat properties
+trackUserAction('search_performed', {
+    search_query: 'flights to bangalore',
+    results_count: 45,
+    filter_economy: true,
+    filter_direct: true
+});
+
+trackBusinessEvent('booking_initiated', {
+    service_type: 'flight',
+    origin: 'DEL',
+    destination: 'BLR',
+    departure_date: '2024-02-15',
+    estimated_price: 5500
+});
+
+trackUserAction('filter_applied', {
+    filter_type: 'price_range',
+    min_price: 2000,
+    max_price: 8000,
+    currency: 'INR'
+});
+```
+
+#### Error Handling for PWA Events
+
+```javascript
+function safeLogEvent(eventType, properties) {
+    try {
+        // Check if running in Rapido app
+        if (!window.NativeJSBridge) {
+            console.warn('Running outside Rapido app - event not logged');
+            return false;
+        }
+        
+        // Check if logEvents method is available
+        if (typeof window.NativeJSBridge.logEvents !== 'function') {
+            console.error('logEvents method not available');
+            return false;
+        }
+        
+        // Validate event type
+        if (!eventType || typeof eventType !== 'string') {
+            throw new Error('eventType must be a non-empty string');
+        }
+        
+        // Validate properties are flat (no nested objects)
+        if (properties && typeof properties === 'object') {
+            for (const [key, value] of Object.entries(properties)) {
+                if (value !== null && typeof value === 'object') {
+                    throw new Error(`Nested objects not allowed. Property '${key}' contains an object.`);
+                }
+            }
+        }
+        
+        // Convert to JSON string
+        const propertiesJson = JSON.stringify(properties || {});
+        
+        // Log the event
+        window.NativeJSBridge.logEvents(eventType, propertiesJson);
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Failed to log event:', error);
+        
+        // Optional: Store for later retry
+        storeEventForLater(eventType, properties);
+        
+        return false;
+    }
+}
+
+// Helper function to store failed events for retry
+function storeEventForLater(eventType, properties) {
+    try {
+        const failedEvent = {
+            eventType,
+            properties,
+            timestamp: Date.now(),
+            retryCount: 0
+        };
+        
+        const failedEvents = JSON.parse(localStorage.getItem('rapido_failed_events') || '[]');
+        failedEvents.push(failedEvent);
+        
+        // Keep only last 50 failed events
+        if (failedEvents.length > 50) {
+            failedEvents.splice(0, failedEvents.length - 50);
+        }
+        
+        localStorage.setItem('rapido_failed_events', JSON.stringify(failedEvents));
+    } catch (storageError) {
+        console.error('Failed to store event for retry:', storageError);
+    }
+}
+
+// Retry failed events when bridge becomes available
+function retryFailedEvents() {
+    try {
+        const failedEvents = JSON.parse(localStorage.getItem('rapido_failed_events') || '[]');
+        const successfulEvents = [];
+        
+        failedEvents.forEach((event, index) => {
+            if (safeLogEvent(event.eventType, event.properties)) {
+                successfulEvents.push(index);
+            }
+        });
+        
+        // Remove successfully sent events
+        const remainingEvents = failedEvents.filter((_, index) => !successfulEvents.includes(index));
+        localStorage.setItem('rapido_failed_events', JSON.stringify(remainingEvents));
+        
+        if (successfulEvents.length > 0) {
+            console.log(`Successfully retried ${successfulEvents.length} failed events`);
+        }
+    } catch (error) {
+        console.error('Failed to retry stored events:', error);
+    }
+}
+
+// Usage with error handling
+safeLogEvent('user_action', {
+    action_name: 'search_performed',
+    search_query: 'hotels in goa',
+    results_count: 23,
+    timestamp: new Date().toISOString()
+});
+```
+
+### Node.js Events Client
+
+```javascript
+const axios = require('axios');
+
+class RapidoEventClient {
+    constructor(clientId, clientKey, serviceType, appId) {
+        this.config = {
+            clientId,
+            clientKey,
+            serviceType,
+            appId,
+            baseURL: '<rapido-host-url>'
+        };
+    }
+
+    async postEvent(userId, eventType, eventId, attributes) {
+        try {
+            const eventData = {
+                userId: userId,
+                event: {
+                    type: eventType,
+                    id: eventId
+                },
+                attributes: attributes,
+                schemaVersion: 1
+            };
+
+            const response = await axios.post(
+                `${this.config.baseURL}/api/ota/event`,
+                eventData,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-client-id': this.config.clientId,
+                        'x-client-service': this.config.serviceType,
+                        'x-client-app-id': this.config.appId,
+                        'authorization': this.config.clientKey
+                    }
+                }
+            );
+
+            if (response.data.success) {
+                console.log('Event posted successfully:', response.data.requestId);
+                return response.data;
+            } else {
+                throw new Error(`Event posting failed: ${response.data.error?.message}`);
+            }
+
+        } catch (error) {
+            console.error('Failed to post event to Rapido:', error);
+            throw error;
+        }
+    }
+
+    // Helper method for flight bookings
+    async postFlightBookingEvent(userId, orderId, orderStatus, bookingDetails) {
+        const eventId = `evt_flight_${orderId}_${Date.now()}`;
+        const attributes = {
+            orderId: orderId,
+            orderStatus: orderStatus,
+            amount_total: bookingDetails.totalAmount,
+            location_origin_lat: bookingDetails.origin.lat,
+            location_origin_long: bookingDetails.origin.lng,
+            location_dest_lat: bookingDetails.destination.lat,
+            location_dest_long: bookingDetails.destination.lng,
+            start_time: bookingDetails.departureTime,
+            end_time: bookingDetails.arrivalTime,
+            hostStatus: orderStatus === 'CONFIRMED' ? 'CONFIRMED' : 'CANCELLED',
+            tz: bookingDetails.timezone || 'Asia/Kolkata'
+        };
+
+        return await this.postEvent(userId, 'order.confirmed', eventId, attributes);
+    }
+
+    // Helper method for hotel bookings
+    async postHotelBookingEvent(userId, orderId, orderStatus, bookingDetails) {
+        const eventId = `evt_hotel_${orderId}_${Date.now()}`;
+        const attributes = {
+            orderId: orderId,
+            orderStatus: orderStatus,
+            amount_total: bookingDetails.totalAmount,
+            location_origin_lat: bookingDetails.hotel.lat,
+            location_origin_long: bookingDetails.hotel.lng,
+            location_dest_lat: bookingDetails.hotel.lat,
+            location_dest_long: bookingDetails.hotel.lng,
+            start_time: bookingDetails.checkInTime,
+            end_time: bookingDetails.checkOutTime,
+            hostStatus: orderStatus === 'CONFIRMED' ? 'CONFIRMED' : 'CANCELLED',
+            tz: bookingDetails.timezone || 'Asia/Kolkata'
+        };
+
+        return await this.postEvent(userId, 'order.confirmed', eventId, attributes);
+    }
+}
+
+// Usage example
+const rapidoEvents = new RapidoEventClient(
+    'your-client-id',
+    'your-client-key', 
+    'flights',
+    'your-app-id'
+);
+
+// Post flight booking confirmation
+async function handleFlightBookingConfirmation(booking) {
+    try {
+        await rapidoEvents.postFlightBookingEvent(
+            booking.rapidoUserId,
+            booking.id,
+            'CONFIRMED',
+            {
+                totalAmount: booking.totalPrice,
+                origin: booking.originAirport.location,
+                destination: booking.destinationAirport.location,
+                departureTime: booking.departureTimestamp,
+                arrivalTime: booking.arrivalTimestamp,
+                timezone: booking.timezone
+            }
+        );
+
+        console.log('Flight booking event sent to Rapido successfully');
+    } catch (error) {
+        console.error('Failed to notify Rapido of booking confirmation:', error);
+        // Handle error appropriately (retry, alert, etc.)
+    }
+}
+```
+
+### Coordinated Event Tracking
+
+Here's how both PWA-to-Native and Server-to-Server events work together in a complete booking flow:
+
+```javascript
+// Frontend PWA - Track user interactions
+class BookingEventTracker {
+    constructor() {
+        this.sessionId = this.getSessionId();
+        this.rapidoEventClient = new RapidoServerEventClient();
+    }
+
+    // PWA to Native events
+    trackSearchInitiated(searchParams) {
+        safeLogEvent('search_initiated', {
+            service_type: searchParams.service,
+            origin: searchParams.origin,
+            destination: searchParams.destination,
+            departure_date: searchParams.departureDate,
+            return_date: searchParams.returnDate,
+            passengers: searchParams.passengers,
+            session_id: this.sessionId,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    trackResultsViewed(resultsData) {
+        safeLogEvent('results_viewed', {
+            service_type: resultsData.service,
+            results_count: resultsData.totalResults,
+            filters_applied: resultsData.appliedFilters,
+            sort_order: resultsData.sortOrder,
+            session_id: this.sessionId,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    trackBookingInitiated(bookingData) {
+        safeLogEvent('booking_initiated', {
+            service_type: bookingData.service,
+            selected_option_id: bookingData.optionId,
+            estimated_price: bookingData.price,
+            session_id: this.sessionId,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    // Coordinate with backend events
+    async handleBookingConfirmation(bookingResult) {
+        // Track frontend completion
+        safeLogEvent('booking_completed', {
+            booking_id: bookingResult.bookingId,
+            final_price: bookingResult.totalAmount,
+            payment_method: bookingResult.paymentMethod,
+            session_id: this.sessionId,
+            timestamp: new Date().toISOString()
+        });
+
+        // Trigger server-to-server event
+        try {
+            await this.rapidoEventClient.postBookingConfirmation(bookingResult);
+        } catch (error) {
+            console.error('Failed to post server event:', error);
+            // Log failure for monitoring
+            safeLogEvent('server_event_failed', {
+                booking_id: bookingResult.bookingId,
+                error_message: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+}
+
+// Backend - Server to Server events
+class RapidoServerEventClient {
+    constructor() {
+        this.client = new RapidoEventClient(
+            process.env.RAPIDO_CLIENT_ID,
+            process.env.RAPIDO_CLIENT_KEY,
+            process.env.SERVICE_TYPE,
+            process.env.APP_ID
+        );
+    }
+
+    async postBookingConfirmation(bookingData) {
+        const eventDetails = this.prepareBookingEventData(bookingData);
+        
+        return await this.client.postFlightBookingEvent(
+            bookingData.rapidoUserId,
+            bookingData.bookingId,
+            'CONFIRMED',
+            eventDetails
+        );
+    }
+
+    prepareBookingEventData(booking) {
+        return {
+            totalAmount: booking.totalAmount,
+            origin: {
+                lat: booking.origin.latitude,
+                lng: booking.origin.longitude
+            },
+            destination: {
+                lat: booking.destination.latitude, 
+                lng: booking.destination.longitude
+            },
+            departureTime: booking.departureTimestamp,
+            arrivalTime: booking.arrivalTimestamp,
+            timezone: booking.timezone || 'Asia/Kolkata'
+        };
+    }
+}
+
+// Usage in booking flow
+const eventTracker = new BookingEventTracker();
+
+// User searches for flights
+eventTracker.trackSearchInitiated({
+    service: 'flight',
+    origin: 'DEL',
+    destination: 'BLR',
+    departureDate: '2024-02-15',
+    passengers: 2
+});
+
+// User views results
+eventTracker.trackResultsViewed({
+    service: 'flight',
+    totalResults: 45,
+    appliedFilters: ['economy', 'morning'],
+    sortOrder: 'price_low_high'
+});
+
+// User initiates booking
+eventTracker.trackBookingInitiated({
+    service: 'flight',
+    optionId: 'flight_123',
+    price: 8500
+});
+
+// Booking confirmed - coordinate both event types
+eventTracker.handleBookingConfirmation({
+    bookingId: 'FL_BOOKING_ABC123',
+    rapidoUserId: 'rapido_user_12345',
+    totalAmount: 8500,
+    paymentMethod: 'credit_card',
+    origin: { latitude: 28.5562, longitude: 77.1000 },
+    destination: { latitude: 12.9716, longitude: 77.5946 },
+    departureTimestamp: 1708156800,
+    arrivalTimestamp: 1708163000,
+    timezone: 'Asia/Kolkata'
+});
+```
+
+This coordinated approach ensures:
+- **Complete User Journey Tracking**: PWA events capture user interactions and decision-making
+- **Business Event Reliability**: Server events ensure critical business events are recorded
+- **Data Consistency**: Both flows share common identifiers (session IDs, booking IDs)
+- **Failure Resilience**: Frontend events continue even if server events fail
+
 ## Testing Examples
 
 ## Session Management Integration Examples
