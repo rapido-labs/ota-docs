@@ -42,7 +42,7 @@ Your Partner API key is provided during the partner onboarding process. Store it
 ### 2. Events API
 **Purpose**: Send business events (orders, bookings, payments) from your backend to Rapido's analytics system
 
-**Endpoint**: `POST /postEvent`
+**Endpoint**: `POST /event`
 
 **Use Case**: Track order confirmations, cancellations, and other business events for analytics and business intelligence.
 
@@ -62,7 +62,7 @@ To ensure fair usage and system stability, the following rate limits apply:
 | Endpoint | Rate Limit | Burst Limit |
 |----------|------------|-------------|
 | `/fetch-user-details` | 100 req/min | 200 req/min |
-| `/postEvent` | 500 req/min | 1000 req/min |
+| `/event` | 500 req/min | 1000 req/min |
 
 Rate limits are applied per Partner API key. Contact support for increased limits based on your usage requirements.
 

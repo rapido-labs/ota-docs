@@ -60,7 +60,7 @@ class RapidoAPIClient {
             baseURL: config.baseURL,
             timeout: config.timeout,
             headers: {
-                'Authorization': `${config.apiKey}`,
+                'authorization': `${config.apiKey}`,
                 'Content-Type': 'application/json',
                 'User-Agent': 'PartnerApp/1.0.0'
             }

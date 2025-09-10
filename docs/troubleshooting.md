@@ -208,7 +208,7 @@ function validateAPIConfig() {
        try {
            const response = await fetch(`${baseURL}/health`, {
                headers: {
-                   'Authorization': `${apiKey}`,
+                   'authorization': `${apiKey}`,
                    'Content-Type': 'application/json'
                }
            });
@@ -557,7 +557,7 @@ async function runIntegrationTest() {
     try {
         const response = await fetch(`${config.rapidoAPI}/health`, {
             headers: {
-                'Authorization': `${apiKey}`
+                'authorization': `${apiKey}`
             },
             timeout: 10000
         });

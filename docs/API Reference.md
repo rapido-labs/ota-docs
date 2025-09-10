@@ -23,21 +23,21 @@ This document provides a quick reference for Rapido's Partner Integration APIs. 
 
 **Purpose**: Send business events (orders, bookings, payments) from your backend to Rapido's analytics system.
 
-**Endpoint**: `POST /postEvent`
+**Endpoint**: `POST /event`
 
-**Base URL**: `https://api.rapido.bike/api/ota`
+**Base URL**: `<rapido-host-url>`
 
 **Authentication**: Partner API Key required
 
 #### Events API Request Format
 ```http
-POST /api/ota/postEvent HTTP/1.1
-Host: api.rapido.bike
+POST /api/ota/event HTTP/1.1
+Host: <rapido-host-url>
 Content-Type: application/json
 x-client-id: CLIENT_ID
 x-client-service: flights/hotels
 x-client-app-id: your-app-id
-Authorization: CLIENT_KEY
+authorization: CLIENT_KEY
 ```
 
 #### Events API Request Body

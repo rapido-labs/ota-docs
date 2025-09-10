@@ -164,18 +164,18 @@ Track business-critical events, order lifecycle, and backend business logic even
 ### API Endpoint
 
 **Method**: `POST`  
-**URL**: `https://<rapido-host-url>/api/ota/postEvent`
+**URL**: `https://<rapido-host-url>/api/ota/event`
 
 ### Authentication & Headers
 
 ```http
-POST /api/ota/postEvent HTTP/1.1
-Host: api.rapido.bike
+POST /api/ota/event HTTP/1.1
+Host: <rapido-host-url>
 Content-Type: application/json
 x-client-id: your-client-id
 x-client-service: flights/hotels
 x-client-app-id: your-app-id
-Authorization: your-client-key
+authorization: your-client-key
 ```
 
 ### Request Schema
@@ -289,7 +289,7 @@ class RapidoEventClient {
             };
 
             const response = await axios.post(
-                `${this.config.baseURL}/api/ota/postEvent`,
+                `${this.config.baseURL}/api/ota/event`,
                 eventData,
                 {
                     headers: {
@@ -297,7 +297,7 @@ class RapidoEventClient {
                         'x-client-id': this.config.clientId,
                         'x-client-service': this.config.serviceType,
                         'x-client-app-id': this.config.appId,
-                        'Authorization': this.config.clientKey
+                        'authorization': this.config.clientKey
                     }
                 }
             );
@@ -425,12 +425,12 @@ class RapidoEventClient:
             'x-client-id': self.config['client_id'],
             'x-client-service': self.config['service_type'],
             'x-client-app-id': self.config['app_id'],
-            'Authorization': self.config['client_key']
+            'authorization': self.config['client_key']
         }
         
         try:
             response = requests.post(
-                f"{self.config['base_url']}/api/ota/postEvent",
+                f"{self.config['base_url']}/api/ota/event",
                 json=event_data,
                 headers=headers,
                 timeout=30
