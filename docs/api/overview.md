@@ -39,6 +39,13 @@ Your Partner API key is provided during the partner onboarding process. Store it
 
 **Use Case**: After your PWA receives a token via `onTokenReceived`, your backend calls this endpoint to validate the token and retrieve user information.
 
+### 2. Events API
+**Purpose**: Send business events (orders, bookings, payments) from your backend to Rapido's analytics system
+
+**Endpoint**: `POST /event`
+
+**Use Case**: Track order confirmations, cancellations, and other business events for analytics and business intelligence.
+
 ## API Features
 
 ### Security Features
@@ -55,6 +62,7 @@ To ensure fair usage and system stability, the following rate limits apply:
 | Endpoint | Rate Limit | Burst Limit |
 |----------|------------|-------------|
 | `/fetch-user-details` | 100 req/min | 200 req/min |
+| `/event` | 500 req/min | 1000 req/min |
 
 Rate limits are applied per Partner API key. Contact support for increased limits based on your usage requirements.
 
@@ -85,7 +93,9 @@ All API responses follow a consistent error format:
 | `UNAUTHORIZED` | 401 | Invalid or missing API key |
 | `RATE_LIMITED` | 429 | Rate limit exceeded |
 | `INVALID_REQUEST` | 400 | Malformed request or missing parameters |
+| `INVALID_EVENT_DATA` | 400 | Event data format is invalid or missing required fields |
 | `USER_NOT_FOUND` | 404 | User associated with token not found |
+| `DUPLICATE_EVENT` | 409 | Event with same ID already exists |
 | `SERVICE_UNAVAILABLE` | 503 | Temporary service disruption |
 
 ## Request/Response Format
@@ -171,5 +181,6 @@ Response:
 
 **Next Steps**: 
 - Review [Token Validation API](./token-validation.md) for implementation details
+- Review [Events Tracking](../integration/events-tracking.md) for complete events implementation guide
 - See [Integration Examples](./examples.md) for complete code samples
 - Check [Security Guidelines](../security.md) for production deployment guidelines

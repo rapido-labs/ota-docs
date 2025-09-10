@@ -21,7 +21,7 @@ The Token Validation API is the primary endpoint for validating user authenticat
 ### Headers
 ```http
 POST /ota/fetch-user-details HTTP/1.1
-Host: api.rapido.bike
+Host: <rapido-host-url>
 Content-Type: application/json
 authorization: CLIENT_KEY
 x-client-id: CLIENT_ID
