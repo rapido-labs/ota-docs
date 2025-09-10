@@ -29,6 +29,7 @@ const sidebars = {
       items: [
         'integration/basics',
         'integration/javascript-bridge',
+        'integration/events-tracking',
       ],
       collapsed: false,
     },

@@ -15,7 +15,7 @@ The JavaScript Bridge is exposed through the `window.NativeJSBridge` object when
 1. **Authentication Token** - Request user authentication tokens
 2. **Login Status** - Notify app about authentication results
 3. **Session Storage** - Securely store and retrieve session IDs
-4. **Event Logging** - Track custom events with structured data for analytics
+4. **Event Logging** - Track real-time user interactions and analytics events (PWA to Native)
 5. **Event Handling** - Receive callbacks from Rapido
 
 ## Available Methods
@@ -303,7 +303,9 @@ function clearStoredSession() {
 
 ### logEvents(eventType, propertiesJson)
 
-Logs custom events with structured data for analytics and tracking purposes.
+Logs real-time user interaction events from your PWA to the Rapido mobile app for analytics and tracking purposes.
+
+> **Note**: This method handles **PWA-to-Native** events for user interactions and analytics. For business events (orders, bookings, payments), use the [Server-to-Server Events API](./events-tracking.md#server-to-server-events) from your backend.
 
 #### Parameters
 - `eventType` (string, required): The type/name of the event to log (e.g., 'user_action', 'page_view', 'custom_event')
@@ -736,6 +738,7 @@ When testing your JavaScript Bridge integration:
 
 **Next Steps**:
 - Review [Integration Basics](./basics.md) for complete implementation flow
+- See [Events Tracking](./events-tracking.md) for complete events tracking guide (PWA & Server-to-Server)
 - Check [API Examples](../api/examples.md) for complete session management implementation
 - See [Security Guidelines](../security.md) for production security requirements
 - Review [Troubleshooting](../troubleshooting.md) for common integration issues

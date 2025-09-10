@@ -138,20 +138,21 @@ The integration includes a comprehensive session management system that enables 
 5. **`updateLoginStatus(success, error)`** - Notify app of login result
    - Used to inform Rapido app of authentication outcome
 
+6. **`logEvents(eventType, propertiesJson)`** - Track user interactions and analytics
+   - Used for real-time event tracking (see [Events Tracking](./integration/events-tracking.md) for complete guide)
+
 ### Security Features
 
 - **Encrypted Storage**: Session IDs stored in Rapido's secure keystore, not browser storage
 - **Token Expiration**: Authentication tokens have limited lifespan (15 minutes)
 - **Session Validation**: Server-side session validation with expiration checking
 - **Automatic Cleanup**: Expired sessions automatically removed from storage
-- **iOS Compatibility**: Callback-based patterns work across all platforms
 
 ### Error Handling Flow
 
 ```
-Authentication Error ──┐
+Authentication Error ─┐
 Session Expired ──────┤──▶ Clear Session ──▶ Restart Auth Flow
-Network Error ────────┤
 Validation Failed ────┘
 ```
 
